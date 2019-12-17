@@ -132,13 +132,16 @@ class Peer extends stream.Duplex {
     // - onfingerprintfailure
     // - onnegotiationneeded
 
-    if (this.initiator || this.negotiated) {
-      this._setupData({
-        channel: this._pc.createDataChannel(this.channelName, this.channelConfig)
-      })
-    } else {
-      this._pc.ondatachannel = event => {
-        this._setupData(event)
+    //wrap data channel into a config. Wowza rtc doesn't support data channels
+    if (this.config.data) {
+      if (this.initiator || this.negotiated) {
+        this._setupData({
+          channel: this._pc.createDataChannel(this.channelName, this.channelConfig)
+        })
+      } else {
+        this._pc.ondatachannel = event => {
+          this._setupData(event)
+        }
       }
     }
 
@@ -988,6 +991,7 @@ Peer.WEBRTC_SUPPORT = !!getBrowserRTC()
  * when constructing a Peer.
  */
 Peer.config = {
+  data: true,
   iceServers: [
     {
       urls: 'stun:stun.l.google.com:19302'
