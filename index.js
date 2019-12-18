@@ -212,6 +212,11 @@ class Peer extends stream.Duplex {
           this._pendingCandidates.forEach(candidate => {
             this._addIceCandidate(candidate)
           })
+
+          if (this._pendingCandidates) {
+            this.addIceCandidates(this._pendingCandidates);
+          }
+
           this._pendingCandidates = []
 
           if (this._pc.remoteDescription.type === 'offer') this._createAnswer()
@@ -223,6 +228,12 @@ class Peer extends stream.Duplex {
     if (!data.sdp && !data.candidate && !data.renegotiate && !data.transceiverRequest) {
       this.destroy(makeError('signal() called with invalid signal data', 'ERR_SIGNALING'))
     }
+  }
+
+  addIceCandidates (candidates) {
+    candidates.forEach(candidate => {
+          this._addIceCandidate(candidate)
+    });
   }
 
   _addIceCandidate (candidate) {
