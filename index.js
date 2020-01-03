@@ -962,11 +962,6 @@ Peer.WEBRTC_SUPPORT = !!getBrowserRTC()
  */
 Peer.config = {
     data: true,
-    startVideoBitrate: 300,
-    //minVideoBitrate: 300,
-    //maxVideoBitrate: 300
-    //audioBitrate: 64,
-    //videoFrameRate: 30,
     iceServers: [{
         urls: 'stun:stun.l.google.com:19302'
     }, {
