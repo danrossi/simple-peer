@@ -47,7 +47,7 @@ class Peer extends stream.Duplex {
         this.initiator = opts.initiator || false
         this.channelConfig = opts.channelConfig || Peer.channelConfig
         this.negotiated = this.channelConfig.negotiated
-        this.config = Object.assign({}, Peer.config, opts.config)
+        this.config = SDPUtils.merge(Peer.defaultConfig, opts.config);
         this.offerOptions = opts.offerOptions || {}
         this.answerOptions = opts.answerOptions || {}
         this.sdpTransform = opts.sdpTransform || (sdp => sdp)
@@ -62,8 +62,11 @@ class Peer extends stream.Duplex {
         this.audioBitrate = opts.audioBitrate;
         this.videoFrameRate = opts.videoFrameRate;
         this.opusConfig = opts.opus;
-
         this.preferredCodecs = opts.preferredCodecs;
+
+        //configure external console logger. 
+        debug.enabled = opts.debug || false;
+
         this.destroyed = false
         this._connected = false
         this.remoteAddress = undefined
@@ -907,8 +910,8 @@ class Peer extends stream.Duplex {
     _debug() {
         var args = [].slice.call(arguments)
         args[0] = '[' + this._id + '] ' + args[0]
-        //debug.apply(null, args)
-        console.log.apply(null, args);
+        debug.apply(null, args)
+        //console.log.apply(null, args);
     }
 
     /**
@@ -953,21 +956,36 @@ class Peer extends stream.Duplex {
             console.log("Bitrate set successfully");
         }).catch(e => console.error(e));
     }
+
+
+    static get WEBRTC_SUPPORT() {
+      return !!getBrowserRTC();
+    }
+
+    /**
+     * Expose peer and data channel config for overriding all Peer
+     * instances. Otherwise, just set opts.config or opts.channelConfig
+     * when constructing a Peer.
+     */
+    static get defaultConfig() {
+      return {
+          data: true,
+          iceServers: [{
+              urls: 'stun:stun.l.google.com:19302'
+          }, {
+              urls: 'stun:global.stun.twilio.com:3478?transport=udp'
+          }],
+          sdpSemantics: 'unified-plan'
+      };
+    }
+
+    static get channelConfig() {
+      return {};
+    }
+
+    static get supportParameters() {
+      return PeerUtils.supportParameters;
+    }
 }
-Peer.WEBRTC_SUPPORT = !!getBrowserRTC()
-/**
- * Expose peer and data channel config for overriding all Peer
- * instances. Otherwise, just set opts.config or opts.channelConfig
- * when constructing a Peer.
- */
-Peer.config = {
-    data: true,
-    iceServers: [{
-        urls: 'stun:stun.l.google.com:19302'
-    }, {
-        urls: 'stun:global.stun.twilio.com:3478?transport=udp'
-    }],
-    sdpSemantics: 'unified-plan'
-}
-Peer.channelConfig = {}
+
 module.exports = Peer
