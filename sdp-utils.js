@@ -89,7 +89,11 @@ class SDPUtils {
           if (media.rtp[0].codec == "opus" && opusConfig) {
             let originalOpusConfig = {};
             //has an opus config already
-            if (media.fmtp[0] && media.fmtp[0].config) originalOpusConfig = sdpTransform.parseFmtpConfig(media.fmtp[0].config);
+            if (media.fmtp[0] && media.fmtp[0].config) 
+              originalOpusConfig = sdpTransform.parseFmtpConfig(media.fmtp[0].config);
+            else
+              media.fmtp.push({});
+            
             opusConf = this.configureOpus(originalOpusConfig, opusConfig);
             media.fmtp[0].config = this.formatConfig(opusConf);
             //packet length
