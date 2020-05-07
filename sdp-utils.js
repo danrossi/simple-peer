@@ -57,17 +57,20 @@ class SDPUtils {
    * Firefox requires TIAS
    */
   static formatBandwidth(max) {
-      let limit = max,
-          type = "AS";
-      if (this.isFirefox) {
-          type = "TIAS";
-          limit = max * 1000;
-      }
-      return [{
-          type: type,
-          limit: limit
-      }];
+      let limit = max;
+
+      if (this.isFirefox) limit = max * 1000;
+
+      return [
+        { type: "AS", limit: limit },
+        { type: "CT", limit: limit },
+        { type: "TIAS", limit: limit },
+
+      ];
+
   }
+
+
   /**
    * Formats fmtp configs for adding x-google-max-bitrate
    */
@@ -163,19 +166,21 @@ class SDPUtils {
   /**
    * Transform SDP for codec selection and bitrate selection
    */
-  static filterCodecAndBitrate(description, preferredCodecs, config) {
-      if ((!PeerUtils.supportCodecPreferences && preferredCodecs) || config.maxVideoBitrate) {
+
+  static filterCodecAndBitrate(description, preferredCodecs, config, codecFilterFallback = false) {
+       const filterCodecs = (!PeerUtils.supportCodecPreference || codecFilterFallback) && preferredCodecs;
+      if (filterCodecs || config.maxVideoBitrate) {
           const sdp = sdpTransform.parse(description.sdp);
           sdp.media.map(media => {
               //for browsers that don't support setCodecPreferences, SDP transformation is required
-              if (preferredCodecs && !PeerUtils.supportCodecPreferences) this.filterCodecs(media, preferredCodecs);
+              if (filterCodecs) this.filterCodecs(media, preferredCodecs);
               if (config.opusConfig && media.type == "audio") this.setOpusConfig(media, config.opusConfig);
               if (config.maxVideoBitrate) this.setMaxBitrate(media, config);
               return media;
           });
           //console.log(sdp.media);
           description.sdp = sdpTransform.write(sdp);
-          //console.log(description.sdp);
+          //console.log("OUTPUT", description.sdp);
       }
       return description;
   }
@@ -191,7 +196,25 @@ class SDPUtils {
    * From the supported codecs filter by mimetype map then by H264 level if set.
    */
   static preferCodec(codecs, codec) {
-      return codecs.filter(supportedCodec => supportedCodec.mimeType == this.mimeTypeMap[codec.codec]).filter(chosenCodec => codec.level && chosenCodec.sdpFmtpLine ? chosenCodec.sdpFmtpLine.indexOf(codec.level) > -1 : true);
+      return codecs
+      .filter(supportedCodec => supportedCodec.mimeType == this.mimeTypeMap[codec.codec])
+      .filter(chosenCodec => {
+      if (codec.level) {
+        //IOS completely fails to report an sdpFmtpLine properly, making level filtering fail. Make it fallback to SDP mangling. 
+        if (!chosenCodec.sdpFmtpLine) return false;
+
+        const ret = chosenCodec.sdpFmtpLine.indexOf(codec.level) > -1;
+        //if a h264 mode filter is set
+        if (codec.mode >= 0) {
+          return ret && chosenCodec.sdpFmtpLine.indexOf("packetization-mode=" + codec.mode.toString()) > -1;
+        }
+
+        return ret;
+      }
+
+      return true;
+    });
+      //.filter(chosenCodec => codec.level && chosenCodec.sdpFmtpLine ? chosenCodec.sdpFmtpLine.indexOf(codec.level) > -1 : true);
   }
 
   static writeConfigParams(config) {

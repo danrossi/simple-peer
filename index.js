@@ -102,7 +102,7 @@ class Peer extends stream.Duplex {
         this._cb = null
         this._interval = null
         try {
-            this._pc = new(this._wrtc.RTCPeerConnection)(this.config)
+            this._pc = new(this._wrtc.RTCPeerConnection)(this.config, opts.pcConstraints || null);
         } catch (err) {
             queueMicrotask(() => this.destroy(makeError(err, 'ERR_PC_CONSTRUCTOR')))
             return
@@ -576,7 +576,7 @@ class Peer extends stream.Duplex {
      * Transform SDP for codec and bitrate selection
      */
     _onFilterCodecAndBitrate(description) {
-        return SDPUtils.filterCodecAndBitrate(description, this.preferredCodecs, this.bwConfig);
+        return SDPUtils.filterCodecAndBitrate(description, this.preferredCodecs, this.bwConfig, this.codecFilterFallback);
     }
 
     /**
@@ -919,6 +919,7 @@ class Peer extends stream.Duplex {
      * Firstly collects the codec capabilities
      */
     setCodecPreferences(chosenCodecs) {
+        this.codecFilterFallback = false;
         if (!PeerUtils.supportCodecPreferences) return;
         const transceivers = this._pc.getTransceivers();
         transceivers.forEach(transceiver => {
@@ -928,6 +929,14 @@ class Peer extends stream.Duplex {
                 codec = chosenCodecs[kind];
             sendCodecs = SDPUtils.preferCodec(sendCodecs, codec);
             recvCodecs = SDPUtils.preferCodec(recvCodecs, codec);
+
+            //if an empty filter choose SDP mangling fallback. IOS returns an empty sdpFmtpLine the absolute idiots !
+            //Android has decided to not provide the same H264 level in the receive codecs as send codecs the idiots. Use fallback or setting preferences will fail. 
+            if (!sendCodecs.length || !recvCodecs.length) {
+                this.codecFilterFallback = true;
+                return;
+            }
+
             const prefferredCodecs = this.chosenPrefferredCodecs = [...sendCodecs, ...recvCodecs];
              //console.log("codecs ", prefferredCodecs);
             transceiver.setCodecPreferences(prefferredCodecs);
