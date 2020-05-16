@@ -171,11 +171,16 @@ class SDPUtils {
        const filterCodecs = (!PeerUtils.supportCodecPreference || codecFilterFallback) && preferredCodecs;
       if (filterCodecs || config.maxVideoBitrate) {
           const sdp = sdpTransform.parse(description.sdp);
-          sdp.media.map(media => {
+          sdp.media.map(media => {  
+            switch (media.type) {
+              case "video":
+              case "audio":
               //for browsers that don't support setCodecPreferences, SDP transformation is required
               if (filterCodecs) this.filterCodecs(media, preferredCodecs);
               if (config.opusConfig && media.type == "audio") this.setOpusConfig(media, config.opusConfig);
               if (config.maxVideoBitrate) this.setMaxBitrate(media, config);
+              break;
+            }
               return media;
           });
           //console.log(sdp.media);

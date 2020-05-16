@@ -41,20 +41,22 @@ class Peer extends stream.Duplex {
             allowHalfOpen: false
         }, opts)
         super(opts)
-        this._id = randombytes(4).toString('hex').slice(0, 7)
-        this._debug('new peer %o', opts)
-        this.channelName = opts.initiator ? opts.channelName || randombytes(20).toString('hex') : null
-        this.initiator = opts.initiator || false
-        this.channelConfig = opts.channelConfig || Peer.channelConfig
-        this.negotiated = this.channelConfig.negotiated
+        this._id = randombytes(4).toString('hex').slice(0, 7);
+        this._debug('new peer %o', opts);
+        this.channelName = opts.initiator ? opts.channelName || randombytes(20).toString('hex') : null;
+        this.initiator = opts.initiator || false;
+        this.channelConfig = opts.channelConfig || Peer.channelConfig;
+        this.dataChannel = opts.dataChannel;
+        this.dataSubscriber = opts.dataSubscriber;
+        this.negotiated = this.channelConfig.negotiated;
         this.config = SDPUtils.merge(Peer.defaultConfig, opts.config);
-        this.offerOptions = opts.offerOptions || {}
-        this.answerOptions = opts.answerOptions || {}
-        this.sdpTransform = opts.sdpTransform || (sdp => sdp)
-        this.streams = opts.streams || (opts.stream ? [opts.stream] : []) // support old "stream" option
-        this.trickle = opts.trickle !== undefined ? opts.trickle : true
-        this.allowHalfTrickle = opts.allowHalfTrickle !== undefined ? opts.allowHalfTrickle : false
-        this.iceCompleteTimeout = opts.iceCompleteTimeout || ICECOMPLETE_TIMEOUT
+        this.offerOptions = opts.offerOptions || {};
+        this.answerOptions = opts.answerOptions || {};
+        this.sdpTransform = opts.sdpTransform || (sdp => sdp);
+        this.streams = opts.streams || (opts.stream ? [opts.stream] : []); // support old "stream" option
+        this.trickle = opts.trickle !== undefined ? opts.trickle : true;
+        this.allowHalfTrickle = opts.allowHalfTrickle !== undefined ? opts.allowHalfTrickle : false;
+        this.iceCompleteTimeout = opts.iceCompleteTimeout || ICECOMPLETE_TIMEOUT;
         //bitrate and framerate configs
         this.minVideoBitrate = opts.minVideoBitrate;
         this.maxVideoBitrate = opts.maxVideoBitrate;
@@ -67,15 +69,15 @@ class Peer extends stream.Duplex {
         //configure external console logger. 
         debug.enabled = opts.debug || false;
 
-        this.destroyed = false
-        this._connected = false
-        this.remoteAddress = undefined
-        this.remoteFamily = undefined
-        this.remotePort = undefined
-        this.localAddress = undefined
-        this.localFamily = undefined
-        this.localPort = undefined
-        this._wrtc = (opts.wrtc && typeof opts.wrtc === 'object') ? opts.wrtc : getBrowserRTC()
+        this.destroyed = false;
+        this._connected = false;
+        this.remoteAddress = undefined;
+        this.remoteFamily = undefined;
+        this.remotePort = undefined;
+        this.localAddress = undefined;
+        this.localFamily = undefined;
+        this.localPort = undefined;
+        this._wrtc = (opts.wrtc && typeof opts.wrtc === 'object') ? opts.wrtc : getBrowserRTC();
         if (!this._wrtc) {
             if (typeof window === 'undefined') {
                 throw makeError('No WebRTC support: Specify `opts.wrtc` option in this environment', 'ERR_WEBRTC_SUPPORT')
@@ -83,24 +85,24 @@ class Peer extends stream.Duplex {
                 throw makeError('No WebRTC support: Not a supported browser', 'ERR_WEBRTC_SUPPORT')
             }
         }
-        this._pcReady = false
-        this._channelReady = false
-        this._iceComplete = false // ice candidate trickle done (got null candidate)
-        this._iceCompleteTimer = null // send an offer/answer anyway after some timeout
-        this._channel = null
-        this._pendingCandidates = []
-        this._isNegotiating = this.negotiated ? false : !this.initiator // is this peer waiting for negotiation to complete?
-        this._batchedNegotiation = false // batch synchronous negotiations
-        this._queuedNegotiation = false // is there a queued negotiation request?
+        this._pcReady = false;
+        this._channelReady = false;
+        this._iceComplete = false; // ice candidate trickle done (got null candidate)
+        this._iceCompleteTimer = null; // send an offer/answer anyway after some timeout
+        this._channel = null;
+        this._pendingCandidates = [];
+        this._isNegotiating = this.negotiated ? false : !this.initiator; // is this peer waiting for negotiation to complete?
+        this._batchedNegotiation = false; // batch synchronous negotiations
+        this._queuedNegotiation = false; // is there a queued negotiation request?
         this._sendersAwaitingStable = []
-        this._senderMap = new Map()
-        this._firstStable = true
-        this._closingInterval = null
-        this._remoteTracks = []
-        this._remoteStreams = []
-        this._chunk = null
-        this._cb = null
-        this._interval = null
+        this._senderMap = new Map();
+        this._firstStable = true;
+        this._closingInterval = null;
+        this._remoteTracks = [];
+        this._remoteStreams = [];
+        this._chunk = null;
+        this._cb = null;
+        this._interval = null;
         try {
             this._pc = new(this._wrtc.RTCPeerConnection)(this.config, opts.pcConstraints || null);
         } catch (err) {
@@ -131,8 +133,9 @@ class Peer extends stream.Duplex {
         // - onfingerprintfailure
         // - onnegotiationneeded
         //wrap data channel into a config. Wowza rtc doesn't support data channels
-        if (this.config.data) {
-            if (this.initiator || this.negotiated) {
+        if (this.dataChannel) {
+            //force subscribers to setup a data channel for Kurento as ondatachannel is not sent
+            if (this.initiator || this.negotiated || this.dataSubscriber) {
                 this._setupData({
                     channel: this._pc.createDataChannel(this.channelName, this.channelConfig)
                 })
