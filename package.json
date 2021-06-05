@@ -10,29 +10,11 @@
   "bugs": {
     "url": "https://github.com/feross/simple-peer/issues"
   },
-  "dependencies": {
-    "debug": "^4.0.1",
-    "get-browser-rtc": "^1.0.0",
-    "queue-microtask": "^1.1.0",
-    "randombytes": "^2.0.3",
-    "readable-stream": "^3.4.0"
-  },
   "devDependencies": {
-    "airtap": "^2.0.3",
-    "babel-minify": "^0.5.1",
-    "bowser": "^2.4.0",
-    "browserify": "^16.1.0",
-    "nyc": "^14.1.1",
-    "prettier-bytes": "^1.0.3",
-    "sdp-transform": "^2.13.0",
-    "simple-get": "^3.0.1",
-    "speedometer": "^1.0.0",
-    "standard": "*",
-    "string-to-stream": "^3.0.0",
-    "tape": "^4.0.0",
-    "thunky": "^1.0.1",
-    "wrtc": "^0.4.1",
-    "ws": "^7.0.0"
+    "@rollup/plugin-node-resolve": "^13.0.0",
+    "rollup": "^2.50.6",
+    "rollup-plugin-terser": "^7.0.2",
+    "sdp-transform": "github:danrossi/sdp-transform"
   },
   "keywords": [
     "data",
@@ -56,7 +38,8 @@
     "url": "git://github.com/feross/simple-peer.git"
   },
   "scripts": {
-    "build": "browserify -s SimplePeer -r . | minify > simplepeer.min.js",
+    "build": "rollup -c rollup.config.js",
+    "build1": "browserify -s SimplePeer -r . | minify > simplepeer.min.js",
     "size": "npm run build && cat simplepeer.min.js | gzip | wc -c",
     "test": "standard && npm run test-node && npm run test-browser",
     "test-browser": "airtap --coverage -- test/*.js",

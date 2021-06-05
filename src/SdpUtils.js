@@ -1,10 +1,12 @@
-const sdpTransform = require('sdp-transform'),
-PeerUtils = require('./peer-utils');
+//import * as sdpTransform from 'sdp-transform';
+import { Parser, Writer } from 'sdp-transform';
+
+import PeerUtils from './PeerUtils';
 
 /**
  * SDP Codec and bitrate utils
  */
-class SDPUtils {
+export default class SDPUtils {
 
   static get isFirefox() {
     return navigator.userAgent.indexOf("Firefox") > -1;
@@ -59,12 +61,22 @@ class SDPUtils {
   static formatBandwidth(max) {
       let limit = max;
 
-      if (this.isFirefox) limit = max * 1000;
+
+      //TIAS is chosen for chrome and causes sdp errors. Use AS for Chrome.
+      if (this.isFirefox) {
+        limit = max * 1000;
+
+        return [
+         // { type: "AS", limit: limit },
+         // { type: "CT", limit: limit },
+          { type: "TIAS", limit: limit },
+
+        ];
+      }
 
       return [
         { type: "AS", limit: limit },
         { type: "CT", limit: limit },
-        { type: "TIAS", limit: limit },
 
       ];
 
@@ -78,7 +90,7 @@ class SDPUtils {
       media.fmtp.map(fmtp => {
           //merge fmtp config if set
           //convert back to a string config after
-          fmtp.config = this.formatConfig(fmtp.config ? this.merge(sdpTransform.parseFmtpConfig(fmtp.config), config) : config);
+          fmtp.config = this.formatConfig(fmtp.config ? this.merge(Parser.parseParams(fmtp.config), config) : config);
       });
   }
 
@@ -93,7 +105,7 @@ class SDPUtils {
             let originalOpusConfig = {};
             //has an opus config already
             if (media.fmtp[0] && media.fmtp[0].config) 
-              originalOpusConfig = sdpTransform.parseFmtpConfig(media.fmtp[0].config);
+              originalOpusConfig = Parser.parseParams(media.fmtp[0].config);
             else
               media.fmtp.push({});
             
@@ -184,7 +196,7 @@ class SDPUtils {
               return media;
           });
           //console.log(sdp.media);
-          description.sdp = sdpTransform.write(sdp);
+          description.sdp = Writer.write(sdp);
           //console.log("OUTPUT", description.sdp);
       }
       return description;
@@ -227,4 +239,5 @@ class SDPUtils {
   }
 }
 
-module.exports = SDPUtils;
+
+//module.exports = SDPUtils;

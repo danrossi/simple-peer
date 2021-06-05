@@ -1,27 +1,14 @@
-//var debug = require('debug')('simple-peer')
-//var getBrowserRTC = require('get-browser-rtc')
-//var randombytes = require('randombytes')
-//var stream = require('readable-stream')
-//var queueMicrotask = require('queue-microtask') // TODO: remove when Node 10 is not supported
+//import debug from 'debug';
+//import stream from 'readable-stream';
 
-import debug from 'debug';
-import getBrowserRTC from 'get-browser-rtc';
-import randombytes from 'randombytes';
-import stream from 'readable-stream';
-import queueMicrotask from 'queue-microtask';
+import SDPUtils from './SdpUtils';
+import PeerUtils from './PeerUtils';
 
-import SDPUtils from './sdp-utils';
-import PeerUtils from './peer-utils';
 
-//const SDPUtils = require('./sdp-utils');
+const MAX_BUFFERED_AMOUNT = 64 * 1024,
+ICECOMPLETE_TIMEOUT = 5 * 1000,
+CHANNEL_CLOSING_TIMEOUT = 5 * 1000;
 
-var MAX_BUFFERED_AMOUNT = 64 * 1024
-var ICECOMPLETE_TIMEOUT = 5 * 1000
-var CHANNEL_CLOSING_TIMEOUT = 5 * 1000
-//const supportCodecPreferences = ('setCodecPreferences' in RTCRtpTransceiver.prototype);
-//const supportParameters = ('setParameters' in window.RTCRtpSender.prototype);
-
-//const PeerUtils = require('./peer-utils');
 
 
 // HACK: Filter trickle lines when trickle is disabled #354
@@ -44,15 +31,16 @@ function warn(message) {
  * Duplex stream.
  * @param {Object} opts
  */
-export default class Peer extends stream.Duplex {
+//class Peer extends stream.Duplex {
+class Peer  {
     constructor(opts) {
-        opts = Object.assign({
+        /*opts = Object.assign({
             allowHalfOpen: false
         }, opts)
-        super(opts)
-        this._id = randombytes(4).toString('hex').slice(0, 7);
+        super(opts)*/
+        this._id = PeerUtils.generateId();
         this._debug('new peer %o', opts);
-        this.channelName = opts.initiator ? opts.channelName || randombytes(20).toString('hex') : null;
+        this.channelName = opts.initiator ? opts.channelName || PeerUtils.generateId(20) : null;
         this.initiator = opts.initiator || false;
         this.channelConfig = opts.channelConfig || Peer.channelConfig;
         //this.dataChannel = opts.dataChannel;
@@ -76,7 +64,8 @@ export default class Peer extends stream.Duplex {
         this.preferredCodecs = opts.preferredCodecs;
 
         //configure external console logger. 
-        debug.enabled = opts.debug || false;
+        //debug.enabled = opts.debug || false;
+        this.debugEnabled = opts.debug || false;
 
         this.destroyed = false;
         this._connected = false;
@@ -86,7 +75,7 @@ export default class Peer extends stream.Duplex {
         this.localAddress = undefined;
         this.localFamily = undefined;
         this.localPort = undefined;
-        this._wrtc = (opts.wrtc && typeof opts.wrtc === 'object') ? opts.wrtc : getBrowserRTC();
+        //this._wrtc = (opts.wrtc && typeof opts.wrtc === 'object') ? opts.wrtc : PeerUtils();
         if (!this._wrtc) {
             if (typeof window === 'undefined') {
                 throw makeError('No WebRTC support: Specify `opts.wrtc` option in this environment', 'ERR_WEBRTC_SUPPORT')
@@ -113,7 +102,9 @@ export default class Peer extends stream.Duplex {
         this._cb = null;
         this._interval = null;
         try {
-            this._pc = new(this._wrtc.RTCPeerConnection)(this.config, opts.pcConstraints || null);
+            //this._pc = new(this._wrtc.RTCPeerConnection)(this.config, opts.pcConstraints || null);
+            this._pc = new PeerUtils.RTCPeerConnection(this.config, opts.pcConstraints || null);
+            
         } catch (err) {
             queueMicrotask(() => this.destroy(makeError(err, 'ERR_PC_CONSTRUCTOR')))
             return
@@ -439,9 +430,6 @@ export default class Peer extends stream.Duplex {
     _destroy(err, cb) {
         if (this.destroyed) return
         this._debug('destroy (error: %s)', err && (err.message || err))
-        this.readable = this.writable = false
-        if (!this._readableState.ended) this.push(null)
-        if (!this._writableState.finished) this.end()
         this.destroyed = true
         this._connected = false
         this._pcReady = false
@@ -945,10 +933,12 @@ export default class Peer extends stream.Duplex {
         })
     }
     _debug() {
+        if (!this.debugEnabled) return;
         var args = [].slice.call(arguments)
         args[0] = '[' + this._id + '] ' + args[0]
-        debug.apply(null, args)
+        //debug.apply(null, args)
         //console.log.apply(null, args);
+        console.log("%c%s", args);
     }
 
     /**
@@ -1005,7 +995,7 @@ export default class Peer extends stream.Duplex {
 
 
     static get WEBRTC_SUPPORT() {
-      return !!getBrowserRTC();
+      return !!PeerUtils.RTCPeerConnection;
     }
 
     /**
@@ -1034,4 +1024,5 @@ export default class Peer extends stream.Duplex {
     }
 }
 
-module.exports = Peer
+//module.exports = Peer
+export { Peer };
