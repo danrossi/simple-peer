@@ -1,27 +1,21 @@
 import { terser } from 'rollup-plugin-terser';
 
-//import commonjs from '@rollup/plugin-commonjs';
 import { nodeResolve } from '@rollup/plugin-node-resolve';
-//import babel from '@rollup/plugin-babel';
 
 export default [
     {
         input: 'src/simple-peer.js',
         plugins: [
-            nodeResolve({ browser:true, preferBuiltins: true })/*,
-            commonjs({
-                            include: './node_modules/**',
-                            transformMixedEsModules: true
-                        })*/
+            nodeResolve({ browser:true, preferBuiltins: true })
         ],
-        output: [
-            {
-                 external: [
+        external: [
                     'global',
                     'global/window',
                     'global/document'
                 ],
-                globals: {
+        output: [
+            {
+                 globals: {
                     'global': 'window',
                     'global/window': 'window',
                     'global/document': 'document'
@@ -36,22 +30,17 @@ export default [
     {
         input: 'src/simple-peer.js',
         plugins: [
-            nodeResolve({ browser:true, preferBuiltins: true }),/*
-            commonjs({
-                            include: './node_modules/**',
-                            transformMixedEsModules: true
-
-                        }),*/
+            nodeResolve({ browser:true, preferBuiltins: true }),
             terser()
         ],
-        output: [
-            {
-                 external: [
+        external: [
                     'global',
                     'global/window',
                     'global/document'
                 ],
-                globals: {
+        output: [
+            {
+                 globals: {
                     'global': 'window',
                     'global/window': 'window',
                     'global/document': 'document'
@@ -63,27 +52,18 @@ export default [
         ]
     },
     {
-        options: {
-             
-        },
         input: 'src/simple-peer.js',
         plugins: [
-            nodeResolve({ browser:true, preferBuiltins: true }),
-            /*commonjs({
-                            include: './node_modules/**',
-                            transformMixedEsModules: true
-
-                        }),*/
-          
+            nodeResolve({ browser:true, preferBuiltins: true })
         ],
-        output: [
-            {
-                external: [
+        external: [
                     'global',
                     'global/window',
                     'global/document'
                 ],
-                globals: {
+        output: [
+            {
+                 globals: {
                     'global': 'window',
                     'global/window': 'window',
                     'global/document': 'document'
@@ -91,6 +71,31 @@ export default [
                 format: 'esm',
                 name: 'SimplePeer',
                 file: 'build/simple-peer.es.js'
+            }
+        ]
+    },
+    {
+        input: 'src/simple-peer.js',
+        plugins: [
+            nodeResolve({ browser:true, preferBuiltins: true }),
+            terser()
+          
+        ],
+        external: [
+                    'global',
+                    'global/window',
+                    'global/document'
+                ],
+        output: [
+            {
+                 globals: {
+                    'global': 'window',
+                    'global/window': 'window',
+                    'global/document': 'document'
+                },
+                format: 'esm',
+                name: 'SimplePeer',
+                file: 'build/simple-peer.es.min.js'
             }
         ]
     }

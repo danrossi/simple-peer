@@ -32,14 +32,14 @@
     "webrtc stream"
   ],
   "license": "MIT",
-  "main": "index.js",
+  "main": "build/simple-peer.js",
+  "module": "build/simple-peer.es.min.js",
   "repository": {
     "type": "git",
     "url": "git://github.com/feross/simple-peer.git"
   },
   "scripts": {
     "build": "rollup -c rollup.config.js",
-    "build1": "browserify -s SimplePeer -r . | minify > simplepeer.min.js",
     "size": "npm run build && cat simplepeer.min.js | gzip | wc -c",
     "test": "standard && npm run test-node && npm run test-browser",
     "test-browser": "airtap --coverage -- test/*.js",
