@@ -16,4 +16,12 @@ export default class PeerUtils {
 	static get RTCPeerConnection() {
 		return window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection;
 	}
+
+	static get RTCSessionDescription() {
+		return window.RTCSessionDescription || window.mozRTCSessionDescription || window.webkitRTCSessionDescription;
+	}
+
+    static get RTCIceCandidate() {
+    	return window.RTCIceCandidate || window.mozRTCIceCandidate || window.webkitRTCIceCandidate;
+    }
 }

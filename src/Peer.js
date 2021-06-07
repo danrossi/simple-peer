@@ -1,8 +1,10 @@
 //import debug from 'debug';
 //import stream from 'readable-stream';
 
-import SDPUtils from './SdpUtils';
-import PeerUtils from './PeerUtils';
+import EventEmitter from './events/EventEmitter';
+
+import SDPUtils from './utils/SdpUtils';
+import PeerUtils from './utils/PeerUtils';
 
 
 const MAX_BUFFERED_AMOUNT = 64 * 1024,
@@ -32,8 +34,9 @@ function warn(message) {
  * @param {Object} opts
  */
 //class Peer extends stream.Duplex {
-class Peer  {
+class Peer extends EventEmitter  {
     constructor(opts) {
+        super();
         /*opts = Object.assign({
             allowHalfOpen: false
         }, opts)
@@ -64,7 +67,6 @@ class Peer  {
         this.preferredCodecs = opts.preferredCodecs;
 
         //configure external console logger. 
-        //debug.enabled = opts.debug || false;
         this.debugEnabled = opts.debug || false;
 
         this.destroyed = false;
@@ -75,14 +77,7 @@ class Peer  {
         this.localAddress = undefined;
         this.localFamily = undefined;
         this.localPort = undefined;
-        //this._wrtc = (opts.wrtc && typeof opts.wrtc === 'object') ? opts.wrtc : PeerUtils();
-        if (!this._wrtc) {
-            if (typeof window === 'undefined') {
-                throw makeError('No WebRTC support: Specify `opts.wrtc` option in this environment', 'ERR_WEBRTC_SUPPORT')
-            } else {
-                throw makeError('No WebRTC support: Not a supported browser', 'ERR_WEBRTC_SUPPORT')
-            }
-        }
+       
         this._pcReady = false;
         this._channelReady = false;
         this._iceComplete = false; // ice candidate trickle done (got null candidate)
@@ -102,7 +97,6 @@ class Peer  {
         this._cb = null;
         this._interval = null;
         try {
-            //this._pc = new(this._wrtc.RTCPeerConnection)(this.config, opts.pcConstraints || null);
             this._pc = new PeerUtils.RTCPeerConnection(this.config, opts.pcConstraints || null);
             
         } catch (err) {
@@ -215,7 +209,7 @@ class Peer  {
             if (this.initiator && this.maxVideoBitrate) {
                 this._onFilterBitrate(data);
             }
-            this._pc.setRemoteDescription(new(this._wrtc.RTCSessionDescription)(data)).then(() => {
+            this._pc.setRemoteDescription(new(PeerUtils.RTCSessionDescription)(data)).then(() => {
                 if (this.destroyed) return
                 this._pendingCandidates.forEach(candidate => {
                     this._addIceCandidate(candidate)
@@ -239,7 +233,7 @@ class Peer  {
         });
     }
     _addIceCandidate(candidate) {
-        var iceCandidateObj = new this._wrtc.RTCIceCandidate(candidate)
+        var iceCandidateObj = new PeerUtils.RTCIceCandidate(candidate)
         this._pc.addIceCandidate(iceCandidateObj).catch(err => {
             if (!iceCandidateObj.address || iceCandidateObj.address.endsWith('.local')) {
                 warn('Ignoring unsupported ICE candidate.')
@@ -421,14 +415,10 @@ class Peer  {
         }
         this._isNegotiating = true
     }
-    // TODO: Delete this method once readable-stream is updated to contain a default
-    // implementation of destroy() that automatically calls _destroy()
-    // See: https://github.com/nodejs/readable-stream/issues/283
-    destroy(err) {
-        this._destroy(err, () => {})
-    }
-    _destroy(err, cb) {
+    destroy(err, cb) {
         if (this.destroyed) return
+
+            console.log(err);
         this._debug('destroy (error: %s)', err && (err.message || err))
         this.destroyed = true
         this._connected = false
@@ -443,8 +433,8 @@ class Peer  {
         this._interval = null
         this._chunk = null
         this._cb = null
-        if (this._onFinishBound) this.removeListener('finish', this._onFinishBound)
-        this._onFinishBound = null
+        this.off('finish', this._onFinishBound);
+        this._onFinishBound = null;
         if (this._channel) {
             try {
                 this._channel.close()
@@ -469,7 +459,7 @@ class Peer  {
         this._channel = null
         if (err) this.emit('error', err)
         this.emit('close')
-        cb()
+        //cb()
     }
     _setupData(event) {
         if (!event.channel) {
@@ -937,8 +927,8 @@ class Peer  {
         var args = [].slice.call(arguments)
         args[0] = '[' + this._id + '] ' + args[0]
         //debug.apply(null, args)
-        //console.log.apply(null, args);
-        console.log("%c%s", args);
+        console.log.apply(null, args);
+        //console.log("%c%s", args);
     }
 
     /**

@@ -1,6 +1,4 @@
-//import * as sdpTransform from 'sdp-transform';
 import { Parser, Writer } from 'sdp-transform';
-
 import PeerUtils from './PeerUtils';
 
 /**
@@ -182,7 +180,7 @@ export default class SDPUtils {
   static filterCodecAndBitrate(description, preferredCodecs, config, codecFilterFallback = false) {
        const filterCodecs = (!PeerUtils.supportCodecPreference || codecFilterFallback) && preferredCodecs;
       if (filterCodecs || config.maxVideoBitrate) {
-          const sdp = sdpTransform.parse(description.sdp);
+          const sdp = Parser.parse(description.sdp);
           sdp.media.map(media => {  
             switch (media.type) {
               case "video":

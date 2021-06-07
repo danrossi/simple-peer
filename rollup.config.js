@@ -16,6 +16,16 @@ export default [
         ],
         output: [
             {
+                 external: [
+                    'global',
+                    'global/window',
+                    'global/document'
+                ],
+                globals: {
+                    'global': 'window',
+                    'global/window': 'window',
+                    'global/document': 'document'
+                },
                 format: 'umd',
                 name: 'SimplePeer',
                 file: 'build/simple-peer.js',
@@ -36,6 +46,16 @@ export default [
         ],
         output: [
             {
+                 external: [
+                    'global',
+                    'global/window',
+                    'global/document'
+                ],
+                globals: {
+                    'global': 'window',
+                    'global/window': 'window',
+                    'global/document': 'document'
+                },
                 format: 'umd',
                 name: 'SimplePeer',
                 file: 'build/simple-peer.min.js'
@@ -43,6 +63,9 @@ export default [
         ]
     },
     {
+        options: {
+             
+        },
         input: 'src/simple-peer.js',
         plugins: [
             nodeResolve({ browser:true, preferBuiltins: true }),
@@ -51,33 +74,21 @@ export default [
                             transformMixedEsModules: true
 
                         }),*/
-            /*babel( {
-                babelHelpers: 'bundled',
-                babelrc: false,
-                "presets": [
-                    [
-                      "@babel/preset-env",
-                      {
-                        "modules": false,
-                        "targets": ">1%",
-                        "loose": true,
-                        "bugfixes": true
-                      }
-                    ]
-                  ],
-                  "plugins": [
-                    [
-                      "@babel/plugin-proposal-class-properties",
-                      {
-                        "loose": true
-                      }
-                    ]
-                  ]
-            } )*/
+          
         ],
         output: [
             {
-                format: 'iife',
+                external: [
+                    'global',
+                    'global/window',
+                    'global/document'
+                ],
+                globals: {
+                    'global': 'window',
+                    'global/window': 'window',
+                    'global/document': 'document'
+                },
+                format: 'esm',
                 name: 'SimplePeer',
                 file: 'build/simple-peer.es.js'
             }

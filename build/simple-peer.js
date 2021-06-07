@@ -4,10 +4,190 @@
 	(global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global.SimplePeer = {}));
 }(this, (function (exports) { 'use strict';
 
+	/**
+	 * Event Emitter
+	 * @author Electroteque Media Daniel Rossi <danielr@electroteque.org>
+	 * Copyright (c) 2016 Electroteque Media
+	 */
+
+	//import _Map from "babel-runtime/core-js/map";
+	//import 'babel-polyfill';
+
+	/**
+	 * Creates a new instance of Emitter.
+	 * @class
+	 * @returns {Object} emitter - An instance of Emitter.
+	 * @example
+	 * var emitter = new Emitter();
+	 */
+
+	const objectToEvents = new WeakMap();
+
+	class EventEmitter {
+
+	    constructor() {
+	        objectToEvents.set(this, {});
+	    }
+
+	    /**
+	     * Adds a listener to the collection for a specified event.
+	     * @public
+	     * @function
+	     * @name Emitter#on
+	     * @param {String} event - Event name.
+	     * @param {Function} listener - Listener function.
+	     * @returns {Object} emitter
+	     * @example
+	     * emitter.on('ready', listener);
+	     */
+	    on(type, callback) {
+
+	        const events = objectToEvents.get(this);
+
+	        if (!events[type]) {
+	            events[type] = [];
+	        }
+	        events[type].push(callback);
+
+	        return this;
+	    }
+
+	    /**
+	     * Adds a one time listener to the collection for a specified event. It will execute only once.
+	     * @public
+	     * @function
+	     * @name Emitter#once
+	     * @param {String} event - Event name.
+	     * @param {Function} listener - Listener function.
+	     * @returns {Object} emitter
+	     * @example
+	     * me.once('contentLoad', listener);
+	     */
+	    once(type, callback) {
+
+	        const fn = (...args) => {
+	            this.off(type, fn);
+	            callback(...args);
+	        };
+
+	        this.on(type, fn);
+
+	        return this;
+	    }
+
+	    /**
+	     * Removes a listener from the collection for a specified event.
+	     * @public
+	     * @function
+	     * @name Emitter#off
+	     * @param {String} event - Event name.
+	     * @param {Function} listener -  Listener function.
+	     * @returns {Object} emitter
+	     * @example
+	     * me.off('ready', listener);
+	     */
+	    off(type, callback) {
+
+	        const events = objectToEvents.get(this)[type];
+
+	        if (events) {
+	            if (callback === null) {
+	                events.length = 0;
+	            } else {
+	                events.splice(events.indexOf(callback), 1);
+	            }
+	        }
+
+
+	        /*let index = 0;
+
+	        function isFunction(obj) {
+	            return typeof obj === 'function' || false;
+	        }
+
+	        if (listeners && listeners.length) {
+
+	            index = listeners.reduce((lastIndex, listener, currentIndex) => {
+	                return isFunction(listener) && listener === callback ? lastIndex = currentIndex : lastIndex;
+	            }, -1);
+
+
+	            if (index > -1) {
+	                listeners.splice(index, 1);
+	                this.listeners.set(event, listeners);
+	            }
+	        }*/
+	        return this;
+	    }
+
+	    /**
+	     * Returns all listeners from the collection for a specified event.
+	     * @public
+	     * @function
+	     * @name Emitter#listeners
+	     * @param {String} event - Event name.
+	     * @returns {Array}
+	     * @example
+	     * me.listeners('ready');
+	     */
+	    listeners(type) {
+	        try {
+	            return objectToEvents.get(this)[type];
+	        } catch (error) {
+	            return null;
+	        }
+	    }
+
+	    /**
+	     * Execute each item in the listener collection in order with the specified data.
+	     * @name Emitter#emit
+	     * @public
+	     * @function
+	     * @param {String} event - The name of the event you want to emit.
+	     * @param {...args} [args] - Data to pass to the listeners.
+	     * @example
+	     * me.emit('ready', 'param1', {..}, [...]);
+	     */
+	    emit(type, ...args) {
+
+	        //const event, events;
+
+	        //events = (objectToEvents.get(this)[type] || []).slice();
+
+	        const events = objectToEvents.get(this)[type];
+
+	        if (events && events.length) {
+	            events.forEach((listener) => {
+	                listener({ type: type, target: this}, ...args);
+	            });
+	            return true;
+	        }
+
+	        return this;
+	    }
+
+	    emitAsync(type, ...args) {
+	        //const listeners = this.listeners.get(event),
+	        const events = objectToEvents.get(this)[type],
+	            promises = [];
+
+
+	        if (events && events.length) {
+	            events.forEach((listener) => {
+	                promises.push(listener({ type: type, target: this}, ...args));
+	            });
+	        }
+
+	        return Promise.all(promises);
+	    }
+
+	}
+
 	const grammar = {
 	  v: [{
 	    name: 'version',
-	    reg: /^(\d*)$/
+	    reg: /^(\d*)$/,
+	    format: '%s'
 	  }],
 	  o: [{
 	    // o=- 20518 0 IN IP4 203.0.113.1
@@ -555,8 +735,8 @@
 
 	class Writer {
 
-		static write(session, opt) {
-			opts = opts || {};
+		static write(session, opts = {}) {
+			//opts = opts || {};
 		  // ensure certain properties exist
 		  if (session.version == null) {
 		    session.version = 0; // 'v=0' must be there (only defined version atm)
@@ -669,8 +849,9 @@
 
 	  static parse(sdp) {
 	    const session = {}
-	      , media = []
-	      , location = session; // points at where properties go under (one of the above)
+	      , media = []; // points at where properties go under (one of the above)
+
+	    let location = session;
 
 	    // parse lines we understand
 	    sdp.split(/(\r\n|\r|\n)/).filter(validLine).forEach((l) => {
@@ -771,9 +952,15 @@
 		static get RTCPeerConnection() {
 			return window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection;
 		}
-	}
 
-	//import * as sdpTransform from 'sdp-transform';
+		static get RTCSessionDescription() {
+			return window.RTCSessionDescription || window.mozRTCSessionDescription || window.webkitRTCSessionDescription;
+		}
+
+	    static get RTCIceCandidate() {
+	    	return window.RTCIceCandidate || window.mozRTCIceCandidate || window.webkitRTCIceCandidate;
+	    }
+	}
 
 	/**
 	 * SDP Codec and bitrate utils
@@ -954,7 +1141,7 @@
 	  static filterCodecAndBitrate(description, preferredCodecs, config, codecFilterFallback = false) {
 	       const filterCodecs = preferredCodecs;
 	      if (filterCodecs || config.maxVideoBitrate) {
-	          const sdp = sdpTransform.parse(description.sdp);
+	          const sdp = Parser.parse(description.sdp);
 	          sdp.media.map(media => {  
 	            switch (media.type) {
 	              case "video":
@@ -1044,8 +1231,9 @@
 	 * @param {Object} opts
 	 */
 	//class Peer extends stream.Duplex {
-	class Peer  {
+	class Peer extends EventEmitter  {
 	    constructor(opts) {
+	        super();
 	        /*opts = Object.assign({
 	            allowHalfOpen: false
 	        }, opts)
@@ -1076,7 +1264,6 @@
 	        this.preferredCodecs = opts.preferredCodecs;
 
 	        //configure external console logger. 
-	        //debug.enabled = opts.debug || false;
 	        this.debugEnabled = opts.debug || false;
 
 	        this.destroyed = false;
@@ -1087,14 +1274,7 @@
 	        this.localAddress = undefined;
 	        this.localFamily = undefined;
 	        this.localPort = undefined;
-	        //this._wrtc = (opts.wrtc && typeof opts.wrtc === 'object') ? opts.wrtc : PeerUtils();
-	        if (!this._wrtc) {
-	            if (typeof window === 'undefined') {
-	                throw makeError('No WebRTC support: Specify `opts.wrtc` option in this environment', 'ERR_WEBRTC_SUPPORT')
-	            } else {
-	                throw makeError('No WebRTC support: Not a supported browser', 'ERR_WEBRTC_SUPPORT')
-	            }
-	        }
+	       
 	        this._pcReady = false;
 	        this._channelReady = false;
 	        this._iceComplete = false; // ice candidate trickle done (got null candidate)
@@ -1114,7 +1294,6 @@
 	        this._cb = null;
 	        this._interval = null;
 	        try {
-	            //this._pc = new(this._wrtc.RTCPeerConnection)(this.config, opts.pcConstraints || null);
 	            this._pc = new PeerUtils.RTCPeerConnection(this.config, opts.pcConstraints || null);
 	            
 	        } catch (err) {
@@ -1227,7 +1406,7 @@
 	            if (this.initiator && this.maxVideoBitrate) {
 	                this._onFilterBitrate(data);
 	            }
-	            this._pc.setRemoteDescription(new(this._wrtc.RTCSessionDescription)(data)).then(() => {
+	            this._pc.setRemoteDescription(new(PeerUtils.RTCSessionDescription)(data)).then(() => {
 	                if (this.destroyed) return
 	                this._pendingCandidates.forEach(candidate => {
 	                    this._addIceCandidate(candidate);
@@ -1251,7 +1430,7 @@
 	        });
 	    }
 	    _addIceCandidate(candidate) {
-	        var iceCandidateObj = new this._wrtc.RTCIceCandidate(candidate);
+	        var iceCandidateObj = new PeerUtils.RTCIceCandidate(candidate);
 	        this._pc.addIceCandidate(iceCandidateObj).catch(err => {
 	            if (!iceCandidateObj.address || iceCandidateObj.address.endsWith('.local')) {
 	                warn('Ignoring unsupported ICE candidate.');
@@ -1433,14 +1612,10 @@
 	        }
 	        this._isNegotiating = true;
 	    }
-	    // TODO: Delete this method once readable-stream is updated to contain a default
-	    // implementation of destroy() that automatically calls _destroy()
-	    // See: https://github.com/nodejs/readable-stream/issues/283
-	    destroy(err) {
-	        this._destroy(err, () => {});
-	    }
-	    _destroy(err, cb) {
+	    destroy(err, cb) {
 	        if (this.destroyed) return
+
+	            console.log(err);
 	        this._debug('destroy (error: %s)', err && (err.message || err));
 	        this.destroyed = true;
 	        this._connected = false;
@@ -1455,7 +1630,7 @@
 	        this._interval = null;
 	        this._chunk = null;
 	        this._cb = null;
-	        if (this._onFinishBound) this.removeListener('finish', this._onFinishBound);
+	        this.off('finish', this._onFinishBound);
 	        this._onFinishBound = null;
 	        if (this._channel) {
 	            try {
@@ -1481,7 +1656,7 @@
 	        this._channel = null;
 	        if (err) this.emit('error', err);
 	        this.emit('close');
-	        cb();
+	        //cb()
 	    }
 	    _setupData(event) {
 	        if (!event.channel) {
@@ -1949,8 +2124,8 @@
 	        var args = [].slice.call(arguments);
 	        args[0] = '[' + this._id + '] ' + args[0];
 	        //debug.apply(null, args)
-	        //console.log.apply(null, args);
-	        console.log("%c%s", args);
+	        console.log.apply(null, args);
+	        //console.log("%c%s", args);
 	    }
 
 	    /**
