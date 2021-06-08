@@ -1363,22 +1363,22 @@
 	        this.once('finish', this._onFinishBound);
 	    }
 	    get bufferSize() {
-	        return (this._channel && this._channel.bufferedAmount) || 0
+	        return (this._channel && this._channel.bufferedAmount) || 0;
 	    }
 	    // HACK: it's possible channel.readyState is "closing" before peer.destroy() fires
 	    // https://bugs.chromium.org/p/chromium/issues/detail?id=882743
 	    get connected() {
-	        return (this._connected && this._channel.readyState === 'open')
+	        return (this._connected && this._channel.readyState === 'open');
 	    }
 	    address() {
 	        return {
 	            port: this.localPort,
 	            family: this.localFamily,
 	            address: this.localAddress
-	        }
+	        };
 	    }
 	    signal(data) {
-	        if (this.destroyed) throw makeError('cannot signal after peer is destroyed', 'ERR_SIGNALING')
+	        if (this.destroyed) throw makeError('cannot signal after peer is destroyed', 'ERR_SIGNALING');
 	        if (typeof data === 'string') {
 	            try {
 	                data = JSON.parse(data);
@@ -1407,7 +1407,7 @@
 	                this._onFilterBitrate(data);
 	            }
 	            this._pc.setRemoteDescription(new(PeerUtils.RTCSessionDescription)(data)).then(() => {
-	                if (this.destroyed) return
+	                if (this.destroyed) return;
 	                this._pendingCandidates.forEach(candidate => {
 	                    this._addIceCandidate(candidate);
 	                });
@@ -1498,9 +1498,9 @@
 	            this._senderMap.set(track, submap);
 	            this._needsNegotiation();
 	        } else if (sender.removed) {
-	            throw makeError('Track has been removed. You should enable/disable tracks that you want to re-add.', 'ERR_SENDER_REMOVED')
+	            throw makeError('Track has been removed. You should enable/disable tracks that you want to re-add.', 'ERR_SENDER_REMOVED');
 	        } else {
-	            throw makeError('Track has already been added to that stream.', 'ERR_SENDER_ALREADY_ADDED')
+	            throw makeError('Track has already been added to that stream.', 'ERR_SENDER_ALREADY_ADDED');
 	        }
 	    }
 	    /**
@@ -1514,7 +1514,7 @@
 	        var submap = this._senderMap.get(oldTrack);
 	        var sender = submap ? submap.get(stream) : null;
 	        if (!sender) {
-	            throw makeError('Cannot replace track that was never added.', 'ERR_TRACK_NOT_ADDED')
+	            throw makeError('Cannot replace track that was never added.', 'ERR_TRACK_NOT_ADDED');
 	        }
 	        if (newTrack) this._senderMap.set(newTrack, submap);
 	        if (sender.replaceTrack != null) {
@@ -1524,29 +1524,6 @@
 	        }
 	    }
 
-	    /*replaceTracks(stream, videoOnly = false) {
-
-	        if (videoOnly) {
-	            const videoSender = getSender("video"),
-	            videoTrack = stream.getVideoTracks()[0];
-
-	            this._debug('replaceTracks()' + videoTrack + " " + sender);
-
-	            videoSender.replaceTrack(videoTrack);
-
-	        } else {
-
-	            const tracks = stream.getTracks();
-	            this.senders.forEach(sender => {
-	                const newTrack = tracks.find(track => track.kind === sender.track.kind);
-
-	                this._debug('replaceTracks()' + newTrack + " " + sender);
-
-	                sender.replaceTrack(newTrack);
-	            });
-	        }
-
-	    }*/
 	    /**
 	     * Remove a MediaStreamTrack from the connection.
 	     * @param {MediaStreamTrack} track
@@ -1557,7 +1534,7 @@
 	        var submap = this._senderMap.get(track);
 	        var sender = submap ? submap.get(stream) : null;
 	        if (!sender) {
-	            throw makeError('Cannot remove track that was never added.', 'ERR_TRACK_NOT_ADDED')
+	            throw makeError('Cannot remove track that was never added.', 'ERR_TRACK_NOT_ADDED');
 	        }
 	        try {
 	            sender.removed = true;
@@ -1583,7 +1560,7 @@
 	    }
 	    _needsNegotiation() {
 	        this._debug('_needsNegotiation');
-	        if (this._batchedNegotiation) return // batch synchronous renegotiations
+	        if (this._batchedNegotiation) return; // batch synchronous renegotiations
 	        this._batchedNegotiation = true;
 	        queueMicrotask(() => {
 	            this._batchedNegotiation = false;
@@ -1613,9 +1590,9 @@
 	        this._isNegotiating = true;
 	    }
 	    destroy(err, cb) {
-	        if (this.destroyed) return
+	        if (this.destroyed) return;
 
-	            console.log(err);
+	            //console.log(err);
 	        this._debug('destroy (error: %s)', err && (err.message || err));
 	        this.destroyed = true;
 	        this._connected = false;
@@ -1663,7 +1640,7 @@
 	            // In some situations `pc.createDataChannel()` returns `undefined` (in wrtc),
 	            // which is invalid behavior. Handle it gracefully.
 	            // See: https://github.com/feross/simple-peer/issues/163
-	            return this.destroy(makeError('Data channel event is missing `channel` property', 'ERR_DATA_CHANNEL'))
+	            return this.destroy(makeError('Data channel event is missing `channel` property', 'ERR_DATA_CHANNEL'));
 	        }
 	        this._channel = event.channel;
 	        this._channel.binaryType = 'arraybuffer';
@@ -1698,14 +1675,14 @@
 	            }
 	        }, CHANNEL_CLOSING_TIMEOUT);
 	    }
-	    _read() {}
+	    /*_read() {}
 	    _write(chunk, encoding, cb) {
-	        if (this.destroyed) return cb(makeError('cannot write after peer is destroyed', 'ERR_DATA_CHANNEL'))
+	        if (this.destroyed) return cb(makeError('cannot write after peer is destroyed', 'ERR_DATA_CHANNEL'));
 	        if (this._connected) {
 	            try {
 	                this.send(chunk);
 	            } catch (err) {
-	                return this.destroy(makeError(err, 'ERR_DATA_CHANNEL'))
+	                return this.destroy(makeError(err, 'ERR_DATA_CHANNEL'));
 	            }
 	            if (this._channel.bufferedAmount > MAX_BUFFERED_AMOUNT) {
 	                this._debug('start backpressure: bufferedAmount %d', this._channel.bufferedAmount);
@@ -1718,11 +1695,11 @@
 	            this._chunk = chunk;
 	            this._cb = cb;
 	        }
-	    }
+	    }*/
 	    // When stream finishes writing, close socket. Half open connections are not
 	    // supported.
 	    _onFinish() {
-	        if (this.destroyed) return
+	        if (this.destroyed) return;
 	        // Wait a bit before destroying so the socket flushes.
 	        // TODO: is there a more reliable way to accomplish this?
 	        const destroySoon = () => {
@@ -1735,8 +1712,8 @@
 	        }
 	    }
 	    _startIceCompleteTimeout() {
-	        if (this.destroyed) return
-	        if (this._iceCompleteTimer) return
+	        if (this.destroyed) return;
+	        if (this._iceCompleteTimer) return;
 	        this._debug('started iceComplete timeout');
 	        this._iceCompleteTimer = setTimeout(() => {
 	            if (!this._iceComplete) {
@@ -1748,11 +1725,11 @@
 	        }, this.iceCompleteTimeout);
 	    }
 	    _onOffer(offer) {
-	        if (this.destroyed) return
+	        if (this.destroyed) return;
 	        if (!this.trickle && !this.allowHalfTrickle) offer.sdp = filterTrickle(offer.sdp);
 	        offer.sdp = this.sdpTransform(offer.sdp);
 	        const sendOffer = () => {
-	            if (this.destroyed) return
+	            if (this.destroyed) return;
 	            var signal = this._pc.localDescription || offer;
 	            this._debug('signal');
 	            this.emit('signal', {
@@ -1762,7 +1739,7 @@
 	        };
 	        const onSuccess = () => {
 	            this._debug('createOffer success');
-	            if (this.destroyed) return
+	            if (this.destroyed) return;
 	            if (this.trickle || this._iceComplete) sendOffer();
 	            else this.once('_iceComplete', sendOffer); // wait for candidates
 	        };
@@ -1813,9 +1790,9 @@
 	        }
 	    }
 	    _createAnswer() {
-	        if (this.destroyed) return
+	        if (this.destroyed) return;
 	        this._pc.createAnswer(this.answerOptions).then(answer => {
-	            if (this.destroyed) return
+	            if (this.destroyed) return;
 	            if (!this.trickle && !this.allowHalfTrickle) answer.sdp = filterTrickle(answer.sdp);
 	            answer.sdp = this.sdpTransform(answer.sdp);
 	            const sendAnswer = () => {
@@ -1829,7 +1806,7 @@
 	                if (!this.initiator) this._requestMissingTransceivers();
 	            };
 	            const onSuccess = () => {
-	                if (this.destroyed) return
+	                if (this.destroyed) return;
 	                if (this.trickle || this._iceComplete) sendAnswer();
 	                else this.once('_iceComplete', sendAnswer);
 	            };
@@ -1842,13 +1819,13 @@
 	        });
 	    }
 	    _onConnectionStateChange() {
-	        if (this.destroyed) return
+	        if (this.destroyed) return;
 	        if (this._pc.connectionState === 'failed') {
 	            this.destroy(makeError('Connection failed.', 'ERR_CONNECTION_FAILURE'));
 	        }
 	    }
 	    _onIceStateChange() {
-	        if (this.destroyed) return
+	        if (this.destroyed) return;
 	        var iceConnectionState = this._pc.iceConnectionState;
 	        var iceGatheringState = this._pc.iceGatheringState;
 	        this._debug('iceStateChange (connection: %s) (gathering: %s)', iceConnectionState, iceGatheringState);
@@ -1872,7 +1849,7 @@
 	                    Object.assign(report, value);
 	                });
 	            }
-	            return report
+	            return report;
 	        };
 	        // Promise-based getStats() (standard)
 	        if (this._pc.getStats.length === 0 || this._isReactNativeWebrtc) {
@@ -1887,7 +1864,7 @@
 	        } else if (this._pc.getStats.length > 0) {
 	            this._pc.getStats(res => {
 	                // If we destroy connection in `connect` callback this code might happen to run when actual connection is already closed
-	                if (this.destroyed) return
+	                if (this.destroyed) return;
 	                var reports = [];
 	                res.result().forEach(result => {
 	                    var report = {};
@@ -1915,13 +1892,13 @@
 	    }
 	    _maybeReady() {
 	        this._debug('maybeReady pc %s channel %s', this._pcReady, this._channelReady);
-	        if (this._connected || this._connecting || !this._pcReady || !this._channelReady) return
+	        if (this._connected || this._connecting || !this._pcReady || !this._channelReady) return;
 	        this._connecting = true;
 	        // HACK: We can't rely on order here, for details see https://github.com/js-platform/node-webrtc/issues/339
 	        const findCandidatePair = () => {
-	            if (this.destroyed) return
+	            if (this.destroyed) return;
 	            this.getStats((err, items) => {
-	                if (this.destroyed) return
+	                if (this.destroyed) return;
 	                // Treat getStats error as non-fatal. It's not essential.
 	                if (err) items = [];
 	                var remoteCandidates = {};
@@ -2005,7 +1982,7 @@
 	                    try {
 	                        this.send(this._chunk);
 	                    } catch (err) {
-	                        return this.destroy(makeError(err, 'ERR_DATA_CHANNEL'))
+	                        return this.destroy(makeError(err, 'ERR_DATA_CHANNEL'));
 	                    }
 	                    this._chunk = null;
 	                    this._debug('sent chunk from "write before connect"');
@@ -2027,12 +2004,12 @@
 	    }
 	    _onInterval() {
 	        if (!this._cb || !this._channel || this._channel.bufferedAmount > MAX_BUFFERED_AMOUNT) {
-	            return
+	            return;
 	        }
 	        this._onChannelBufferedAmountLow();
 	    }
 	    _onSignalingStateChange() {
-	        if (this.destroyed) return
+	        if (this.destroyed) return;
 	        if (this._pc.signalingState === 'stable' && !this._firstStable) {
 	            this._isNegotiating = false;
 	            // HACK: Firefox doesn't yet support removing tracks when signalingState !== 'stable'
@@ -2055,7 +2032,7 @@
 	        this.emit('signalingStateChange', this._pc.signalingState);
 	    }
 	    _onIceCandidate(event) {
-	        if (this.destroyed) return
+	        if (this.destroyed) return;
 	        if (event.candidate && this.trickle) {
 	            this.emit('signal', {
 	                candidate: {
@@ -2075,26 +2052,26 @@
 	        }
 	    }
 	    _onChannelMessage(event) {
-	        if (this.destroyed) return
+	        if (this.destroyed) return;
 	        var data = event.data;
 	        if (data instanceof ArrayBuffer) data = Buffer.from(data);
 	        this.push(data);
 	    }
 	    _onChannelBufferedAmountLow() {
-	        if (this.destroyed || !this._cb) return
+	        if (this.destroyed || !this._cb) return;
 	        this._debug('ending backpressure: bufferedAmount %d', this._channel.bufferedAmount);
 	        var cb = this._cb;
 	        this._cb = null;
 	        cb(null);
 	    }
 	    _onChannelOpen() {
-	        if (this._connected || this.destroyed) return
+	        if (this._connected || this.destroyed) return;
 	        this._debug('on channel open');
 	        this._channelReady = true;
 	        this._maybeReady();
 	    }
 	    _onChannelClose() {
-	        if (this.destroyed) return
+	        if (this.destroyed) return;
 	        this._debug('on channel close');
 	        this.destroy();
 	    }
@@ -2102,7 +2079,7 @@
 	        this.emit('stream', event.stream);
 	    }
 	    _onTrack(event) {
-	        if (this.destroyed) return
+	        if (this.destroyed) return;
 	        event.streams.forEach(eventStream => {
 	            this._debug('on track');
 	            this.emit('track', event.track, eventStream);
@@ -2111,8 +2088,8 @@
 	                stream: eventStream
 	            });
 	            if (this._remoteStreams.some(remoteStream => {
-	                    return remoteStream.id === eventStream.id
-	                })) return // Only fire one 'stream' event, even though there may be multiple tracks per stream
+	                    return remoteStream.id === eventStream.id;
+	                })) return; // Only fire one 'stream' event, even though there may be multiple tracks per stream
 	            this._remoteStreams.push(eventStream);
 	            queueMicrotask(() => {
 	                this.emit('stream', eventStream); // ensure all tracks have been added
