@@ -1302,7 +1302,7 @@
 	        }
 	        // We prefer feature detection whenever possible, but sometimes that's not
 	        // possible for certain implementations.
-	        this._isReactNativeWebrtc = typeof this._pc._peerConnectionId === 'number';
+	        //this._isReactNativeWebrtc = typeof this._pc._peerConnectionId === 'number';
 	        this._pc.oniceconnectionstatechange = () => {
 	            this._onIceStateChange();
 	        };
@@ -1852,7 +1852,8 @@
 	            return report;
 	        };
 	        // Promise-based getStats() (standard)
-	        if (this._pc.getStats.length === 0 || this._isReactNativeWebrtc) {
+	        if (this._pc.getStats.length === 0) {
+	        //if (this._pc.getStats.length === 0 || this._isReactNativeWebrtc) {
 	            this._pc.getStats().then(res => {
 	                var reports = [];
 	                res.forEach(report => {
@@ -2169,7 +2170,7 @@
 	     */
 	    static get defaultConfig() {
 	      return {
-	          dataChannel: true,
+	          //dataChannel: true,
 	          iceServers: [{
 	              urls: 'stun:stun.l.google.com:19302'
 	          }, {
