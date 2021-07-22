@@ -142,7 +142,7 @@ export default class Peer extends stream.Duplex {
         // - onfingerprintfailure
         // - onnegotiationneeded
         //wrap data channel into a config. Wowza rtc doesn't support data channels
-        if (this.config.dataChannel) {
+        if (opts.dataChannel) {
             //force subscribers to setup a data channel for Kurento as ondatachannel is not sent
             if (this.initiator || this.negotiated || this.dataSubscriber) {
                 this._setupData({
