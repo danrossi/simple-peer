@@ -1348,6 +1348,16 @@ class Peer extends EventEmitter  {
                 this._onStream(event);
             };
         }
+
+        if (opts.transceiverDirection) {
+            const init = {
+                direction: opts.transceiverDirection
+            };
+
+            this._pc.addTransceiver("video", init);
+            this._pc.addTransceiver("audio", init);
+        }
+
         if (this.initiator) {
             this._needsNegotiation();
         }
