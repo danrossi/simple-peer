@@ -597,7 +597,7 @@ class Peer extends EventEmitter  {
             this._pc.getTransceivers().forEach(transceiver => {
                 if (!transceiver.mid && transceiver.sender.track && !transceiver.requested) {
                     transceiver.requested = true // HACK: Safari returns negotiated transceivers with a null mid
-                    this.addTransceiver(transceiver.sender.track.kind)
+                    this.addTransceiver(transceiver.sender.track.kind);
                 }
             })
         }
@@ -609,9 +609,9 @@ class Peer extends EventEmitter  {
             if (!this.trickle && !this.allowHalfTrickle) answer.sdp = filterTrickle(answer.sdp);
             answer.sdp = this.sdpTransform(answer.sdp);
             const sendAnswer = () => {
-                if (this.destroyed) return
-                var signal = this._pc.localDescription || answer
-                this._debug('signal')
+                if (this.destroyed) return;
+                var signal = this._pc.localDescription || answer;
+                this._debug('signal');
                 this.emit('signal', {
                     type: signal.type,
                     sdp: signal.sdp
