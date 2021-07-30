@@ -1806,7 +1806,7 @@
 	            if (!this.trickle && !this.allowHalfTrickle) answer.sdp = filterTrickle(answer.sdp);
 	            answer.sdp = this.sdpTransform(answer.sdp);
 	            const sendAnswer = () => {
-	                if (this.destroyed) return
+	                if (this.destroyed) return;
 	                var signal = this._pc.localDescription || answer;
 	                this._debug('signal');
 	                this.emit('signal', {
