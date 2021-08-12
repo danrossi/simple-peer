@@ -1276,7 +1276,7 @@ class Peer extends EventEmitter  {
         this._channel = null;
         this._pendingCandidates = [];
         this._isNegotiating = this.negotiated ? false : !this.initiator; // is this peer waiting for negotiation to complete?
-        this._batchedNegotiation = false; // batch synchronous negotiations
+        this._batchedNegotiation = opts.disableNegotiate || false; // batch synchronous negotiations
         this._queuedNegotiation = false; // is there a queued negotiation request?
         this._sendersAwaitingStable = [];
         this._senderMap = new Map();
