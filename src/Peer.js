@@ -96,6 +96,8 @@ class Peer extends EventEmitter  {
         this._chunk = null;
         this._cb = null;
         this._interval = null;
+        this.simulcast = opts.simulcast || false;
+        this.sendEncodings = opts.sendEncodings || [{}];
         try {
             this._pc = new PeerUtils.RTCPeerConnection(this.config, opts.pcConstraints || null);
             
@@ -139,14 +141,18 @@ class Peer extends EventEmitter  {
                 };
             }
         }
+        
         if (this.streams) {
             this.streams.forEach(stream => {
                 this.addStream(stream);
             });
 
+            if (this.simulcast) this.setVideoEncodings(this.sendEncodings);
+
             //for browsers that support setCodecPreferences, setup the preffered codecs
             if (this.preferredCodecs) this.setCodecPreferences(this.preferredCodecs);
         }
+
         //ontrack check
         if ('ontrack' in this._pc) {
             this._pc.ontrack = event => {
@@ -288,14 +294,57 @@ class Peer extends EventEmitter  {
      */
     addStream(stream) {
         this._debug('addStream()');
-        if ('addTrack' in this._pc) {
+
+        if (this.simulcast && this.sendEncodings) {
+            const transceiverInit = {
+                "video": {
+                    sendEncodings: this.sendEncodings
+                },
+                "audio": {}
+            };
             stream.getTracks().forEach(track => {
-                this.addTrack(track, stream);
+                const init = Object.assign({}, transceiverInit[track.kind], { streams: [stream] });
+                this.addTransceiver(track, init);
             });
+
+                    
         } else {
-            this._pc.addStream(stream);
+            if ('addTrack' in this._pc) {
+                stream.getTracks().forEach(track => {
+                    this.addTrack(track, stream);
+                });
+            } else {
+                this._pc.addStream(stream);
+            }
         }
+
+
+        
     }
+
+    addStream(stream) {
+            this._debug('addStream()');
+
+            if (this.transceiverInit) {
+                    stream.getTracks().forEach(track => {
+                        const init = Object.assign({}, this.transceiverInit[track.kind], { streams: [stream] });
+                        this.addTransceiver(track, init);
+                    });
+
+                    
+            } else {
+                if ('addTrack' in this._pc) {
+                    stream.getTracks().forEach(track => {
+                        this.addTrack(track, stream);
+                    });
+                } else {
+                    this._pc.addStream(stream);
+                }
+            }
+
+           
+        }
+
     /**
      * Add a MediaStreamTrack to the connection.
      * @param {MediaStreamTrack} track
@@ -969,6 +1018,19 @@ class Peer extends EventEmitter  {
           this.emit("bitratechanged", parameters);
             console.log("Bitrate set successfully");
         }).catch(e => console.error(e));
+    }
+
+    setVideoEncodings(encodings) {
+            if (!PeerUtils.supportParameters) return;
+            const sender = this.getSender("video"),
+                parameters = sender.getParameters();
+           
+            parameters.encodings = encodings;
+            //console.log("SET PARAMS", parameters);
+            sender.setParameters(parameters).then(() => {
+              this.emit("simulcastset", parameters);
+             //   console.log("Simulcast set successfully", parameters);
+            }).catch(e => console.error(e));
     }
 
 

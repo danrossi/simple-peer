@@ -33,7 +33,7 @@
   ],
   "license": "MIT",
   "main": "build/simple-peer.js",
-  "module": "build/simple-peer.es.min.js",
+  "module": "build/simple-peer.es.js",
   "repository": {
     "type": "git",
     "url": "git://github.com/feross/simple-peer.git"
