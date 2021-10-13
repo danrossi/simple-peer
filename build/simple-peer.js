@@ -1519,29 +1519,6 @@
 	        
 	    }
 
-	    addStream(stream) {
-	            this._debug('addStream()');
-
-	            if (this.transceiverInit) {
-	                    stream.getTracks().forEach(track => {
-	                        const init = Object.assign({}, this.transceiverInit[track.kind], { streams: [stream] });
-	                        this.addTransceiver(track, init);
-	                    });
-
-	                    
-	            } else {
-	                if ('addTrack' in this._pc) {
-	                    stream.getTracks().forEach(track => {
-	                        this.addTrack(track, stream);
-	                    });
-	                } else {
-	                    this._pc.addStream(stream);
-	                }
-	            }
-
-	           
-	        }
-
 	    /**
 	     * Add a MediaStreamTrack to the connection.
 	     * @param {MediaStreamTrack} track
