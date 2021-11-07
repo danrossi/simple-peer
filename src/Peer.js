@@ -497,6 +497,7 @@ class Peer extends EventEmitter  {
             this._onChannelOpen();
         };
         this._channel.onclose = () => {
+            this._debug('on channel close');
             //this._onChannelClose();
         };
         this._channel.onerror = err => {
