@@ -895,8 +895,9 @@ class Peer extends EventEmitter  {
     _onChannelMessage(event) {
         if (this.destroyed) return;
         var data = event.data;
-        if (data instanceof ArrayBuffer) data = Buffer.from(data);
-        this.push(data);
+        this.emit('data', data);
+        //if (data instanceof ArrayBuffer) data = Buffer.from(data);
+        //this.push(data);
     }
     _onChannelBufferedAmountLow() {
         if (this.destroyed || !this._cb) return;
