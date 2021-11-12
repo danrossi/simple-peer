@@ -1199,8 +1199,7 @@ class SDPUtils {
 
 
 const MAX_BUFFERED_AMOUNT = 64 * 1024,
-ICECOMPLETE_TIMEOUT = 5 * 1000,
-CHANNEL_CLOSING_TIMEOUT = 5 * 1000;
+ICECOMPLETE_TIMEOUT = 5 * 1000;
 
 
 
@@ -1692,11 +1691,14 @@ class Peer extends EventEmitter  {
             //this._onChannelClose();
         };
         this._channel.onerror = err => {
-            this.destroy(makeError(err, 'ERR_DATA_CHANNEL'));
+            if (this._channel.readyState != "closed") {
+                this.destroy(makeError(err, 'ERR_DATA_CHANNEL'));
+            }
+  
         };
         // HACK: Chrome will sometimes get stuck in readyState "closing", let's check for this condition
         // https://bugs.chromium.org/p/chromium/issues/detail?id=882743
-        var isClosing = false;
+        /*var isClosing = false;
         this._closingInterval = setInterval(() => { // No "onclosing" event
             if (this._channel && this._channel.readyState === 'closing') {
                 if (isClosing) this._onChannelClose(); // closing timed out: equivalent to onclose firing
@@ -1704,7 +1706,7 @@ class Peer extends EventEmitter  {
             } else {
                 isClosing = false;
             }
-        }, CHANNEL_CLOSING_TIMEOUT);
+        }, CHANNEL_CLOSING_TIMEOUT);*/
     }
     /*_read() {}
     _write(chunk, encoding, cb) {
@@ -2106,7 +2108,7 @@ class Peer extends EventEmitter  {
     _onChannelClose() {
         if (this.destroyed) return;
         this._debug('on channel close');
-        this.destroy();
+        //this.destroy();
     }
     _onStream(event) {
         this.emit('stream', event.stream);
