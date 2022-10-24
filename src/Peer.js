@@ -64,7 +64,10 @@ class Peer extends EventEmitter  {
         this.audioBitrate = opts.audioBitrate;
         this.videoFrameRate = opts.videoFrameRate;
         this.opusConfig = opts.opus;
+        this.opusChannels = opts.opusChannels;
         this.preferredCodecs = opts.preferredCodecs;
+        this.disableVideo = opts.disableVideo;
+        this.disableAudio = opts.disableAudio;
 
         //configure external console logger. 
         this.debugEnabled = opts.debug || false;
@@ -292,10 +295,32 @@ class Peer extends EventEmitter  {
      * Add a MediaStream to the connection.
      * @param {MediaStream} stream
      */
+
+    
+
     addStream(stream) {
         this._debug('addStream()');
 
-        if (this.simulcast && this.sendEncodings) {
+        const transceiverInit = {
+            "video": {
+                direction: this.disableVideo ? "inactive" : "sendonly",
+                sendEncodings: {
+                    scalabilityMode: this.scalabilityMode
+                }
+            },
+            "audio": {
+                direction: this.disableAudio ? "inactive" : "sendonly"
+            }
+        };
+
+        if (this.simulcast && this.sendEncodings) transceiverInit.video.sendEncodings = this.sendEncodings;
+
+        stream.getTracks().forEach(track => {
+            const init = Object.assign({}, transceiverInit[track.kind], { streams: [stream] });
+            this.addTransceiver(track, init);
+        });
+
+        /*if (this.simulcast && this.sendEncodings) {
             const transceiverInit = {
                 "video": {
                     sendEncodings: this.sendEncodings
@@ -316,7 +341,7 @@ class Peer extends EventEmitter  {
             } else {
                 this._pc.addStream(stream);
             }
-        }
+        }*/
 
 
         
@@ -599,7 +624,8 @@ class Peer extends EventEmitter  {
         maxVideoBitrate: this.maxVideoBitrate, 
         startVideoBitrate: this.startVideoBitrate, 
         videoFrameRate: this.videoFrameRate, 
-        opusConfig: this.opusConfig
+        opusConfig: this.opusConfig,
+        opusChannels: this.opusChannels
       };
     }
 

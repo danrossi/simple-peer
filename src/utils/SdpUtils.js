@@ -95,7 +95,7 @@ export default class SDPUtils {
   /**
    * Opus codec configs
    */
-  static  setOpusConfig(media, opusConfig) {
+  static  setOpusConfig(media, opusConfig, opusChannels = null) {
         let opusConf = {};
 
         if (media.type == "audio") {
@@ -112,6 +112,11 @@ export default class SDPUtils {
             //packet length
             if (opusConfig.maxptime) media.maxptime = opusConfig.maxptime;
             if (opusConfig.ptime) media.ptime = opusConfig.ptime;
+            //add multichannel opus
+            if (opusChannels > 2) {
+              media.rtp[0].codec = "multiopus";
+              media.rtp[0].encoding = opusChannels;
+            }
           }
         }
 
@@ -179,7 +184,7 @@ export default class SDPUtils {
 
   static filterCodecAndBitrate(description, preferredCodecs, config, codecFilterFallback = false) {
        const filterCodecs = (!PeerUtils.supportCodecPreference || codecFilterFallback) && preferredCodecs;
-      if (filterCodecs || config.maxVideoBitrate) {
+      if (filterCodecs || config.maxVideoBitrate || config.opusConfig) {
           const sdp = Parser.parse(description.sdp);
           sdp.media.map(media => {  
             switch (media.type) {
@@ -187,10 +192,11 @@ export default class SDPUtils {
               case "audio":
               //for browsers that don't support setCodecPreferences, SDP transformation is required
               if (filterCodecs) this.filterCodecs(media, preferredCodecs);
-              if (config.opusConfig && media.type == "audio") this.setOpusConfig(media, config.opusConfig);
+              if (config.opusConfig && media.type == "audio") this.setOpusConfig(media, config.opusConfig, config.opusChannels);
               if (config.maxVideoBitrate) this.setMaxBitrate(media, config);
               break;
             }
+
               return media;
           });
           //console.log(sdp.media);
