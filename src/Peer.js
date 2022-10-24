@@ -100,7 +100,7 @@ class Peer extends EventEmitter  {
         this._cb = null;
         this._interval = null;
         this.simulcast = opts.simulcast || false;
-        this.sendEncodings = opts.sendEncodings || [{}];
+        this.sendEncodings = opts.sendEncodings || [];
         try {
             this._pc = new PeerUtils.RTCPeerConnection(this.config, opts.pcConstraints || null);
             
@@ -150,7 +150,7 @@ class Peer extends EventEmitter  {
                 this.addStream(stream);
             });
 
-            if (this.simulcast) this.setVideoEncodings(this.sendEncodings);
+            if (this.simulcast && this.sendEncodings.length) this.setVideoEncodings(this.sendEncodings);
 
             //for browsers that support setCodecPreferences, setup the preffered codecs
             if (this.preferredCodecs) this.setCodecPreferences(this.preferredCodecs);
@@ -303,17 +303,17 @@ class Peer extends EventEmitter  {
 
         const transceiverInit = {
             "video": {
-                direction: this.disableVideo ? "inactive" : "sendonly",
-                sendEncodings: {
+                direction: this.disableVideo ? "inactive" : "sendonly"
+                /*sendEncodings: {
                     scalabilityMode: this.scalabilityMode
-                }
+                }*/
             },
             "audio": {
                 direction: this.disableAudio ? "inactive" : "sendonly"
             }
         };
 
-        if (this.simulcast && this.sendEncodings) transceiverInit.video.sendEncodings = this.sendEncodings;
+        if (this.simulcast && this.sendEncodings.length) transceiverInit.video.sendEncodings = this.sendEncodings;
 
         stream.getTracks().forEach(track => {
             const init = Object.assign({}, transceiverInit[track.kind], { streams: [stream] });
