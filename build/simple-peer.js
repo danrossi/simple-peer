@@ -1845,7 +1845,7 @@
 	        return SDPUtils.filterBitrate(description, this.bwConfig);
 	    }
 	    _createOffer() {
-	        if (this.destroyed) return
+	       // if (this.destroyed) return
 	        this._pc.createOffer(this.offerOptions).then(offer => this._onFilterCodecAndBitrate(offer)).then(offer => this._onOffer(offer)).catch(err => {
 	            this.destroy(makeError(err, 'ERR_CREATE_OFFER'));
 	        });
