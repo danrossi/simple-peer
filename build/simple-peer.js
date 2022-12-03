@@ -1270,6 +1270,7 @@
 	        this.preferredCodecs = opts.preferredCodecs;
 	        this.disableVideo = opts.disableVideo;
 	        this.disableAudio = opts.disableAudio;
+	        this.transceiverTracks = opts.transceiverTracks || true;
 
 	        //configure external console logger. 
 	        this.debugEnabled = opts.debug || false;
@@ -1503,38 +1504,25 @@
 	    addStream(stream) {
 	        this._debug('addStream()');
 
-	        const transceiverInit = {
-	            "video": {
-	                direction: this.disableVideo ? "inactive" : "sendonly"
-	                /*sendEncodings: {
-	                    scalabilityMode: this.scalabilityMode
-	                }*/
-	            },
-	            "audio": {
-	                direction: this.disableAudio ? "inactive" : "sendonly"
-	            }
-	        };
-
-	        if (this.simulcast && this.sendEncodings.length) transceiverInit.video.sendEncodings = this.sendEncodings;
-
-	        stream.getTracks().forEach(track => {
-	            const init = Object.assign({}, transceiverInit[track.kind], { streams: [stream] });
-	            this.addTransceiver(track, init);
-	        });
-
-	        /*if (this.simulcast && this.sendEncodings) {
+	        if (this.transceiverTracks) {
 	            const transceiverInit = {
 	                "video": {
-	                    sendEncodings: this.sendEncodings
+	                    direction: this.disableVideo ? "inactive" : "sendonly"
+	                    /*sendEncodings: {
+	                        scalabilityMode: this.scalabilityMode
+	                    }*/
 	                },
-	                "audio": {}
+	                "audio": {
+	                    direction: this.disableAudio ? "inactive" : "sendonly"
+	                }
 	            };
+	    
+	            if (this.simulcast && this.sendEncodings.length) transceiverInit.video.sendEncodings = this.sendEncodings;
+	    
 	            stream.getTracks().forEach(track => {
 	                const init = Object.assign({}, transceiverInit[track.kind], { streams: [stream] });
 	                this.addTransceiver(track, init);
 	            });
-
-	                    
 	        } else {
 	            if ('addTrack' in this._pc) {
 	                stream.getTracks().forEach(track => {
@@ -1543,10 +1531,7 @@
 	            } else {
 	                this._pc.addStream(stream);
 	            }
-	        }*/
-
-
-	        
+	        }        
 	    }
 
 	    /**
