@@ -1270,7 +1270,7 @@
 	        this.preferredCodecs = opts.preferredCodecs;
 	        this.disableVideo = opts.disableVideo;
 	        this.disableAudio = opts.disableAudio;
-	        this.transceiverTracks = opts.transceiverTracks !== undefined ?  opts.transceiverTracks : true;
+	        this.transceiverTracks = opts.transceiverTracks !== undefined ?  opts.transceiverTracks : false;
 
 	        //configure external console logger. 
 	        this.debugEnabled = opts.debug || false;
