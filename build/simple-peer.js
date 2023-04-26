@@ -1565,14 +1565,17 @@
 	        var submap = this._senderMap.get(oldTrack);
 	        var sender = submap ? submap.get(stream) : null;
 	        if (!sender) {
-	            throw makeError('Cannot replace track that was never added.', 'ERR_TRACK_NOT_ADDED');
-	        }
-	        if (newTrack) this._senderMap.set(newTrack, submap);
-	        if (sender.replaceTrack != null) {
-	            sender.replaceTrack(newTrack);
+	            this.addTrack(newTrack, stream);
+	            //throw makeError('Cannot replace track that was never added.', 'ERR_TRACK_NOT_ADDED');
 	        } else {
-	            this.destroy(makeError('replaceTrack is not supported in this browser', 'ERR_UNSUPPORTED_REPLACETRACK'));
+	            if (newTrack) this._senderMap.set(newTrack, submap);
+	            if (sender.replaceTrack != null) {
+	                sender.replaceTrack(newTrack);
+	            } else {
+	                this.destroy(makeError('replaceTrack is not supported in this browser', 'ERR_UNSUPPORTED_REPLACETRACK'));
+	            }
 	        }
+	        
 	    }
 
 	    /**
