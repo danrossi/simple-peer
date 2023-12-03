@@ -2143,10 +2143,11 @@
 	        if (this.destroyed) return;
 	        event.streams.forEach(eventStream => {
 	            this._debug('on track');
-	            this.emit('track', event.track, eventStream);
+	            this.emit('track', event.track, eventStream, event.transceiver);
 	            this._remoteTracks.push({
 	                track: event.track,
-	                stream: eventStream
+	                stream: eventStream,
+	                transceiver: event.transceiver
 	            });
 	            if (this._remoteStreams.some(remoteStream => {
 	                    return remoteStream.id === eventStream.id;
