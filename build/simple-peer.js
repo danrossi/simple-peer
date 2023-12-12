@@ -2128,6 +2128,7 @@
 	    _onChannelOpen() {
 	        if (this._connected || this.destroyed) return;
 	        this._debug('on channel open');
+	        this.emit('channelopen', this._channel);
 	        this._channelReady = true;
 	        this._maybeReady();
 	    }
