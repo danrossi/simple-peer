@@ -69,6 +69,8 @@ class Peer extends EventEmitter  {
         this.disableVideo = opts.disableVideo;
         this.disableAudio = opts.disableAudio;
         this.transceiverTracks = opts.transceiverTracks !== undefined ?  opts.transceiverTracks : false;
+        //custom extensions
+        this.extensions = opts.extensions || [];
 
         //configure external console logger. 
         this.debugEnabled = opts.debug || false;
@@ -621,7 +623,7 @@ class Peer extends EventEmitter  {
      * Transform SDP for codec and bitrate selection
      */
     _onFilterCodecAndBitrate(description) {
-        return SDPUtils.filterCodecAndBitrate(description, this.preferredCodecs, this.bwConfig, this.codecFilterFallback);
+        return SDPUtils.filterCodecAndBitrate(description, this.preferredCodecs, this.bwConfig, this.extensions, this.codecFilterFallback);
     }
 
     /**
