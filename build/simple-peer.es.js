@@ -191,13 +191,13 @@ const grammar = {
     format: '%s %s %d %s IP%d %s'
   }],
   // default parsing of these only (though some of these feel outdated)
-  s: [{ name: 'name' }],
-  i: [{ name: 'description' }],
-  u: [{ name: 'uri' }],
-  e: [{ name: 'email' }],
-  p: [{ name: 'phone' }],
-  z: [{ name: 'timezones' }], // TODO: this one can actually be parsed properly...
-  r: [{ name: 'repeats' }],   // TODO: this one can also be parsed properly
+  s: [{ name: 'name', reg: /(.*)/, format: '%s' }],
+  i: [{ name: 'description', reg: /(.*)/, format: '%s' }],
+  u: [{ name: 'uri', reg: /(.*)/, format: '%s' }],
+  e: [{ name: 'email', reg: /(.*)/, format: '%s' }],
+  p: [{ name: 'phone', reg: /(.*)/, format: '%s' }],
+  z: [{ name: 'timezones', reg: /(.*)/, format: '%s' }], // TODO: this one can actually be parsed properly...
+  r: [{ name: 'repeats', reg: /(.*)/, format: '%s' }],   // TODO: this one can also be parsed properly
   // k: [{}], // outdated thing ignored
   t: [{
     // t=0 0
@@ -242,6 +242,9 @@ const grammar = {
             : 'rtpmap:%d %s';
       }
     },
+
+   // a=fmtp:97 packetization-mode=1;profile-level-id=64001F;sprop-parameter-sets=Z2QAH6wspQEAEmwFqAgICgAAB9AAAdTBwAAATEsAACYlrd5cFA==,aOuPLA==
+
     {
       // a=fmtp:108 profile-level-id=24;object=23;bitrate=64000
       // a=fmtp:111 minptime=10; useinbandfec=1
@@ -654,6 +657,8 @@ const grammar = {
     {
       // any a= that we don't understand is kept verbatim on media.invalid
       push: 'invalid',
+      reg: /(.*)/,
+      format: '%s',
       names: ['value']
     }
   ]
@@ -839,6 +844,8 @@ class Parser {
 
     let location = session;
 
+   // console.log(sdp.split(/(\r\n|\r|\n)/).filter(validLine));
+
     // parse lines we understand
     sdp.split(/(\r\n|\r|\n)/).filter(validLine).forEach((l) => {
       const type = l[0],
@@ -849,7 +856,9 @@ class Parser {
         location = media[media.length-1]; // point at latest media line
       }
 
+      
       for (let j = 0; j < (grammar[type] || []).length; j += 1) {
+
         const obj = grammar[type][j];
 
         if (obj.reg.test(content)) {
@@ -952,9 +961,18 @@ class PeerUtils {
  * SDP Codec and bitrate utils
  */
 class SDPUtils {
+  
 
   static get isFirefox() {
     return navigator.userAgent.indexOf("Firefox") > -1;
+  }
+
+  static parse(description) {
+    return Parser.parse(description.sdp);
+  }
+
+  static write(sdp) {
+    return Writer.write(sdp);
   }
 
   static get mimeTypeMap() {
@@ -2274,4 +2292,4 @@ class Peer extends EventEmitter  {
     }
 }
 
-export { Peer };
+export { Peer, SDPUtils };

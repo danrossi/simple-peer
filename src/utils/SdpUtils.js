@@ -5,9 +5,18 @@ import PeerUtils from './PeerUtils';
  * SDP Codec and bitrate utils
  */
 export default class SDPUtils {
+  
 
   static get isFirefox() {
     return navigator.userAgent.indexOf("Firefox") > -1;
+  }
+
+  static parse(description) {
+    return Parser.parse(description.sdp);
+  }
+
+  static write(sdp) {
+    return Writer.write(sdp);
   }
 
   static get mimeTypeMap() {
