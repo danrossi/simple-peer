@@ -11,12 +11,18 @@ export default class SDPUtils {
     return navigator.userAgent.indexOf("Firefox") > -1;
   }
 
-  static parse(description) {
-    return Parser.parse(description.sdp);
+  static async parse(description) {
+    return new Promise((accept) => {
+      const session = Parser.parse(description.sdp);
+      accept(session);
+    });
   }
 
-  static write(sdp) {
-    return Writer.write(sdp);
+  static async write(session) {
+    return new Promise((accept) => {
+      const sdp = Writer.write(session);
+      accept(sdp);
+    });
   }
 
   static get mimeTypeMap() {
