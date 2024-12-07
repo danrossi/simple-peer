@@ -230,7 +230,10 @@ class Peer extends EventEmitter  {
         if (data.sdp) {
             if (this.initiator && this.maxVideoBitrate) {
                 this._onFilterBitrate(data);
-            }
+            } /*else if (!this.initiator) {
+                data.sdp = this.sdpTransform(data.sdp);
+            }*/
+
             this._pc.setRemoteDescription(new(PeerUtils.RTCSessionDescription)(data)).then(() => {
                 if (this.destroyed) return;
                 this._pendingCandidates.forEach(candidate => {

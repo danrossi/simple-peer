@@ -180,8 +180,7 @@ class EventEmitter {
 const grammar = {
   v: [{
     name: 'version',
-    reg: /^(\d*)$/,
-    format: '%s'
+    reg: /^(\d*)$/
   }],
   o: [{
     // o=- 20518 0 IN IP4 203.0.113.1
@@ -192,13 +191,13 @@ const grammar = {
     format: '%s %s %d %s IP%d %s'
   }],
   // default parsing of these only (though some of these feel outdated)
-  s: [{ name: 'name', reg: /(.*)/, format: '%s' }],
-  i: [{ name: 'description', reg: /(.*)/, format: '%s' }],
-  u: [{ name: 'uri', reg: /(.*)/, format: '%s' }],
-  e: [{ name: 'email', reg: /(.*)/, format: '%s' }],
-  p: [{ name: 'phone', reg: /(.*)/, format: '%s' }],
-  z: [{ name: 'timezones', reg: /(.*)/, format: '%s' }], // TODO: this one can actually be parsed properly...
-  r: [{ name: 'repeats', reg: /(.*)/, format: '%s' }],   // TODO: this one can also be parsed properly
+  s: [{ name: 'name' }],
+  i: [{ name: 'description' }],
+  u: [{ name: 'uri' }],
+  e: [{ name: 'email' }],
+  p: [{ name: 'phone' }],
+  z: [{ name: 'timezones' }], // TODO: this one can actually be parsed properly...
+  r: [{ name: 'repeats' }],   // TODO: this one can also be parsed properly
   // k: [{}], // outdated thing ignored
   t: [{
     // t=0 0
@@ -273,7 +272,7 @@ const grammar = {
       push: 'rtcpFbTrrInt',
       reg: /^rtcp-fb:(\*|\d*) trr-int (\d*)/,
       names: ['payload', 'value'],
-      format: 'rtcp-fb:%d trr-int %d'
+      format: 'rtcp-fb:%s trr-int %d'
     },
     {
       // a=rtcp-fb:98 nack rpsi
@@ -306,8 +305,7 @@ const grammar = {
     {
       // a=extmap-allow-mixed
       name: 'extmapAllowMixed',
-      reg: /^(extmap-allow-mixed)/,
-      format: '%s'
+      reg: /^(extmap-allow-mixed)/
     },
     {
       // a=crypto:1 AES_CM_128_HMAC_SHA1_80 inline:PS1uQCVeeCFCanVmcjkpPywjNWhcYD0mXXtxaVBR|2^20|1:32
@@ -347,26 +345,24 @@ const grammar = {
     {
       // a=ptime:20
       name: 'ptime',
-      reg: /^ptime:(\d*)/,
+      reg: /^ptime:(\d*(?:\.\d*)*)/,
       format: 'ptime:%d'
     },
     {
       // a=maxptime:60
       name: 'maxptime',
-      reg: /^maxptime:(\d*)/,
+      reg: /^maxptime:(\d*(?:\.\d*)*)/,
       format: 'maxptime:%d'
     },
     {
       // a=sendrecv
       name: 'direction',
-      reg: /^(sendrecv|recvonly|sendonly|inactive)/,
-      format: '%s'
+      reg: /^(sendrecv|recvonly|sendonly|inactive)/
     },
     {
       // a=ice-lite
       name: 'icelite',
-      reg: /^(ice-lite)/,
-      format: '%s'
+      reg: /^(ice-lite)/
     },
     {
       // a=ice-ufrag:F7gI
@@ -416,8 +412,7 @@ const grammar = {
     {
       // a=end-of-candidates (keep after the candidates line for readability)
       name: 'endOfCandidates',
-      reg: /^(end-of-candidates)/,
-      format: '%s'
+      reg: /^(end-of-candidates)/
     },
     {
       // a=remote-candidates:1 203.0.113.1 54400 2 203.0.113.1 54401 ...
@@ -473,14 +468,12 @@ const grammar = {
     {
       // a=rtcp-mux
       name: 'rtcpMux',
-      reg: /^(rtcp-mux)/,
-      format: '%s'
+      reg: /^(rtcp-mux)/
     },
     {
       // a=rtcp-rsize
       name: 'rtcpRsize',
-      reg: /^(rtcp-rsize)/,
-      format: '%s'
+      reg: /^(rtcp-rsize)/
     },
     {
       // a=sctpmap:5000 webrtc-datachannel 1024
@@ -573,8 +566,7 @@ const grammar = {
     {
       // a=bundle-only
       name: 'bundleOnly',
-      reg: /^(bundle-only)/,
-      format: '%s'
+      reg: /^(bundle-only)/
     },
     {
       // a=label:1
@@ -662,9 +654,7 @@ const grammar = {
     {
       // any a= that we don't understand is kept verbatim on media.invalid
       push: 'invalid',
-      names: ['value'],
-      reg: /(.*)/,
-      format: '%s'
+      names: ['value']
     }
   ]
 };
@@ -824,7 +814,9 @@ function parseReg(obj, location, content) {
 }
 
 
+
 const validLine = RegExp.prototype.test.bind(/^([a-z])=(.*)/);
+
 
 function paramReducer(acc, expr) {
   const s = expr.split(/=(.+)/, 2);
@@ -1155,7 +1147,7 @@ class SDPUtils {
    */
 
   static filterCodecAndBitrate(description, preferredCodecs, config, extensions = [], codecFilterFallback = false) {
-    const filterCodecs = preferredCodecs,
+    const filterCodecs = (!PeerUtils.supportCodecPreference || codecFilterFallback) && preferredCodecs,
     hasExtensions = extensions.length;
     if (filterCodecs || config.maxVideoBitrate || config.opusConfig || hasExtensions) {
       const sdp = Parser.parse(description.sdp);
@@ -1445,7 +1437,10 @@ class Peer extends EventEmitter  {
         if (data.sdp) {
             if (this.initiator && this.maxVideoBitrate) {
                 this._onFilterBitrate(data);
-            }
+            } /*else if (!this.initiator) {
+                data.sdp = this.sdpTransform(data.sdp);
+            }*/
+
             this._pc.setRemoteDescription(new(PeerUtils.RTCSessionDescription)(data)).then(() => {
                 if (this.destroyed) return;
                 this._pendingCandidates.forEach(candidate => {
