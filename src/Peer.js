@@ -1,7 +1,8 @@
 //import debug from 'debug';
 //import stream from 'readable-stream';
 
-import EventEmitter from './events/EventEmitter';
+//import EventEmitter from './events/EventEmitter';
+import EventEmitter from 'event-emitter';
 
 import SDPUtils from './utils/SdpUtils';
 import PeerUtils from './utils/PeerUtils';

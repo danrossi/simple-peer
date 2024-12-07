@@ -59,7 +59,8 @@ export default [
         external: [
                     'global',
                     'global/window',
-                    'global/document'
+                    'global/document',
+                    'event-emitter'
                 ],
         output: [
             {
@@ -84,7 +85,8 @@ export default [
         external: [
                     'global',
                     'global/window',
-                    'global/document'
+                    'global/document',
+                    'event-emitter'
                 ],
         output: [
             {
