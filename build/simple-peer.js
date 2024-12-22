@@ -1373,6 +1373,10 @@
 	        this._pc.onicecandidate = event => {
 	            this._onIceCandidate(event);
 	        };
+
+	        this._pc.onnegotiationneeded = () => {
+	            this.emit('negotiationneeded');
+	        };
 	        // Other spec events, unused by this implementation:
 	        // - onconnectionstatechange
 	        // - onicecandidateerror
