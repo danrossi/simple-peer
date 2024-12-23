@@ -950,22 +950,31 @@ class Peer extends EventEmitter  {
     }
     _onTrack(event) {
         if (this.destroyed) return;
-        event.streams.forEach(eventStream => {
-            this._debug('on track');
-            this.emit('track', event.track, eventStream, event.transceiver);
-            this._remoteTracks.push({
-                track: event.track,
-                stream: eventStream,
-                transceiver: event.transceiver
-            });
-            if (this._remoteStreams.some(remoteStream => {
-                    return remoteStream.id === eventStream.id;
-                })) return; // Only fire one 'stream' event, even though there may be multiple tracks per stream
-            this._remoteStreams.push(eventStream);
-            queueMicrotask(() => {
-                this.emit('stream', eventStream); // ensure all tracks have been added
-            });
-        })
+        if (event.streams && event.streams.length) {
+            event.streams.forEach(eventStream => {
+                this._debug('on track');
+                this.emit('track', event.track, eventStream, event.transceiver);
+                this._remoteTracks.push({
+                    track: event.track,
+                    stream: eventStream,
+                    transceiver: event.transceiver
+                });
+                if (this._remoteStreams.some(remoteStream => {
+                        return remoteStream.id === eventStream.id;
+                    })) return; // Only fire one 'stream' event, even though there may be multiple tracks per stream
+                this._remoteStreams.push(eventStream);
+                queueMicrotask(() => {
+                    this.emit('stream', eventStream); // ensure all tracks have been added
+                });
+            })
+        } else {
+            this.emit('remotetrack', event.track, event.transceiver);
+                this._remoteTracks.push({
+                    track: event.track,
+                    transceiver: event.transceiver
+                });
+        }
+        
     }
     _debug() {
         if (!this.debugEnabled) return;
