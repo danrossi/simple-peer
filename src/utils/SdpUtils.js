@@ -30,7 +30,9 @@ export default class SDPUtils {
       "opus": "audio/opus",
       "H264": "video/H264",
       "VP8": "video/VP8",
-      "VP9": "video/VP9"
+      "VP9": "video/VP9",
+      "H265": "video/H265",
+      "AV1": "video/AV1"
     }
   }
 

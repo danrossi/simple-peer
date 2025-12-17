@@ -815,7 +815,9 @@ class SDPUtils {
       "opus": "audio/opus",
       "H264": "video/H264",
       "VP8": "video/VP8",
-      "VP9": "video/VP9"
+      "VP9": "video/VP9",
+      "H265": "video/H265",
+      "AV1": "video/AV1"
     }
   }
 
@@ -1066,6 +1068,8 @@ class SDPUtils {
 //module.exports = SDPUtils;
 
 //import debug from 'debug';
+//import stream from 'readable-stream';
+
 
 
 const MAX_BUFFERED_AMOUNT = 64 * 1024,
